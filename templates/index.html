@@ -21,9 +21,108 @@
                 max-width: 820px;
             }
         }
+
+        .progress {
+            background-color: transparent; /* 배경 색상을 투명으로 설정 */
+        }
     </style>
     <script>
+        $(document).ready(function () {
+            // $("#feed-box").empty();
+            showFeed();
+        });
+        
+        function showFeed(){
+            $.ajax({
+                    type: "GET",
+                    url: "/test",
+                    data: {},
+                    success: function (response) {
+                        if(result == "success")
+                        {
+                            let data = response['data'];
+                            for(let i = 0; i <data.length;i++){
+                                let mode = data['mode'];
+                                if(mode == "MESSAGE"){
+                                    let recepient = data['recepient'];
+                                    let content = data['content'];
+                                    //let reactionId = data['reactionId'];
+                                    //let reactions = data['reactions'];  // list
+                                    makeMessageCard(recepient,content);
+                                }
+                                else if(mode == "VOTE"){
+                                    let title = data['title'];
+                                    let options = data['options']; // list
+                                    let optionCounts = data['optionCounts']; // list
+                                    let optionId = data['optionId']; // 0인 경우는 투표 안한 경우
+                                    if(optionId == 0){
+                                        makeBeforeVoteCard(title,options);
+                                    }
+                                    else{
+                                        makeAfterVoteCard(title,options,optionCounts,optionId);
+                                    }
+                                }       
+                            }
 
+                            // 선택된 페이지 (defalut : 1)
+                            let page = response['page'];
+
+                        }
+
+
+                       
+                    }
+                })
+        }
+
+        function makeMessageCard(recepient, content) {
+            let tempHtml = `<div class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
+                        <div class="card-body d-flex flex-column justify-content-center">
+                        <h2 class="text-muted">익명의 사용자가 <b>${recepient}</b>에게 메세지를 남겼습니다. </h2>
+                            <p>"</p>
+                            <pre><h5>   ${content} <h5></pre>
+                            <p>"</p>
+                        </div>
+                    </div>`;
+            $("#feed-box").append(tempHtml);
+        }
+
+        function makeBeforeVoteCard(title,options){
+
+            let tempHtml = `<h2 class="text-muted">익명의 사용자가 투표를 남겼습니다:<strong>"${title}"</strong> </h2>`;
+            for(let i = 0; i < options.length;i++){
+                let subHtml =`<div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="exampleCheckbox">
+                    <label class="form-check-label" for="exampleCheckbox">
+                        ${options[i]}
+                    </label>
+                </div>`;
+
+                tempHtml += subHtml;
+            }
+
+            $("#feed-box").append(tempHtml);
+        }
+
+        function makeAfterVoteCard(title,options,optionCounts,optionId){
+            let tempHtml = `<h2 class="text-muted">익명의 사용자가 투표를 남겼습니다:<strong>"${title}"</strong> </h2>`;
+            let max = 0;
+            // for(let i = 0; i < optionCounts.length;i++){
+            //     if(optionCounts)
+            // }
+
+            for(let i = 0; i < options.length;i++){
+                let subHtml =`<div class="progress">
+                    <div class="text-muted">${options[i]}</div>
+                    <div class="progress-bar" role="progressbar" style="width: 50%;" aria-valuenow="{{ 50 }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>`;
+
+                tempHtml += subHtml;
+            }
+
+            $("#feed-box").append(tempHtml);
+        }
+        
     </script>
 </head>
 <body>
@@ -40,14 +139,49 @@
         <button type="button" class="btn btn-outline-success">투표 제안</button>
     </div>
     <!-- content container -->
-    <div id="movie-box" class="content container">
+    <div id="feed-box" class="content container">
         <div class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
-            <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                <h1 class="text-center text-muted">
+            <div class="card-body d-flex flex-column justify-content-center">
+                <!-- <h1 class="text-center text-muted"> align-items-center
                     컨텐츠✨
-                </h1>
+                </h1> -->
+                <!-- <h2 class="text-muted">익명의 사용자가 <b>AAA</b>에게 메세지를 남겼습니다. </h2>
+                <p>"</p>
+                <pre><h5>   잘생겼어요 <h5></pre>
+                <p>"</p> -->
+                <!-- <h2 class="text-muted">익명의 사용자가 투표를 남겼습니다:<strong>"탕수육vs탕후루"</strong> </h2>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="exampleCheckbox">
+                    <label class="form-check-label" for="exampleCheckbox">
+                        탕수육
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="exampleCheckbox">
+                    <label class="form-check-label" for="exampleCheckbox">
+                        탕후루
+                    </label>
+                </div> -->
+                
+                <!-- <div class="progress">
+                    <div class="text-muted">텍스트 왼쪽에 추가</div>
+                    <div class="progress-bar" role="progressbar" style="width: 50%;" aria-valuenow="{{ 50 }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div> -->
+                
             </div>
         </div>
     </div>
+    <!-- <div class="container">
+        <h1>페이지네이션 예제</h1>
+        <ul class="pagination">
+            <li class="page-item"><a class="page-link" href="{{ url_for('index', page=1) }}">이전</a></li>
+            {% for page_num in range(page, 5) %}
+            <li class="page-item {% if page_num == current_page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('index', page=page_num) }}">{{ page_num }}</a>
+            </li>
+            {% endfor %}
+            <li class="page-item"><a class="page-link" href="{{ url_for('index', page=total_pages) }}">다음</a></li>
+        </ul>
+    </div> -->
 </body>
 </html>

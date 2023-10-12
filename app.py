@@ -51,6 +51,7 @@ app.json = CustomJSONProvider(app)
 def hello_world():
     return 'Hello World!'
 
+
 @app.route("/users/login", methods=['POST'])
 def login():
     requests = request.get_json()
@@ -60,7 +61,7 @@ def login():
     user_info = db.User.find_one({ "userId": input_user_id })
 
     if user_info is None:
-        return jsonify({"result": "fail", "data": "존재하지 않는 유저입니다."})
+        return jsonify({"result": "fail", "data": "아이디가 틀렸거나, 존재하지 않는 유저입니다."})
     
     id = str(user_info['_id'])
     name = user_info['name']
@@ -94,6 +95,7 @@ def login():
 def validate_token(access_token):
     try:
         decode_token(access_token).get(app.config["JWT_SECRET_KEY"], None)
+        print("token is valid")
     except ExpiredSignatureError: 
         return render_template('login.html')
 

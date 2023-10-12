@@ -6,7 +6,7 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 from flask.json.provider import JSONProvider
 import json
-from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, decode_token, get_jwt_identity, set_access_cookies, set_refresh_cookies
+from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, decode_token, get_jwt_identity, set_access_cookies, set_refresh_cookies, unset_access_cookies, unset_jwt_cookies, unset_refresh_cookies
 
 # import for environment variables
 from dotenv import load_dotenv
@@ -58,7 +58,7 @@ def login():
     input_user_id = requests.get("userId")
     input_password = requests.get("password")
 
-    user_info = db.User.find_one({ "userId": input_user_id })
+    user_info = db.User.find_one({ "userId": input_user_id, "status": "active" })
 
     if user_info is None:
         return jsonify({"result": "fail", "data": "아이디가 틀렸거나, 존재하지 않는 유저입니다."})
@@ -75,10 +75,10 @@ def login():
     access_token = create_access_token(identity=id, additional_claims={"id": id, "name": name})
     refresh_token = create_refresh_token(identity=id)
 
-    # 주석처리해야함
+    ########### 주석처리해야함
     validate_token(access_token, refresh_token)
 
-    response = jsonify({"result": "fail", "data": {
+    response = jsonify({"result": "success", "data": {
         "access_token": access_token, 
         "refresh_token": refresh_token
     }})
@@ -93,8 +93,11 @@ def login():
 
 @app.route("/auth/check", methods=['GET'])
 def check_login_first():
-    access_token = request.cookies.get('access_token')
-    refresh_token = request.cookies.get('refresh_token')
+    access_token = request.cookies.get('access_token_cookie')
+    refresh_token = request.cookies.get('refresh_token_cookie')
+
+    if access_token is None or refresh_token is None:
+        return jsonify({"result": "fail", "data": "로그인이 필요합니다."})
 
     return validate_token(access_token, refresh_token)
 
@@ -102,7 +105,7 @@ def check_login_first():
 # access token 재발급
 @app.route("/auth/refresh", methods=['GET'])
 def refresh_access_token():
-    refresh_token = request.cookies.get('refresh_token')
+    refresh_token = request.cookies.get('refresh_token_cookie')
 
     if refresh_token is None:
         return jsonify({"result": "fail", "data": "로그인이 필요합니다."})
@@ -115,6 +118,18 @@ def refresh_access_token():
         "access_token": access_token
     }})
     set_access_cookies(response, access_token)
+
+    return response
+
+
+# 로그아웃
+@app.route("/users/logout", methods=['GET'])
+def logout():
+
+    response = jsonify({"result": "success", "data": "로그아웃 되었습니다."})
+    unset_jwt_cookies(response)
+    response.delete_cookie('id')
+    response.delete_cookie('name')
 
     return response
 
@@ -230,14 +245,16 @@ def do_vote(voteId, optionId):
 def validate_token(access_token, refresh_token):
     try:
         decode_token(access_token).get(app.config["JWT_SECRET_KEY"], None)
-        print("access token is valid")
+        # print("access token is valid")
     except ExpiredSignatureError: 
         return jsonify({"result": "fail", "data": "로그인 유지 시간이 만료되었습니다. 연장하시겠습니까?"})
     
     try:
         decode_token(refresh_token).get(app.config["JWT_SECRET_KEY"], None)
-        print("refresh token is valid")
+        # print("refresh token is valid")
     except ExpiredSignatureError: 
+        # 로그아웃 처리 
+        logout()
 
         return jsonify({"result": "fail", "data": "로그인한 시간이 오래되었습니다. 다시 로그인해주세요."})
     return jsonify({"result": "success", "data": "로그인이 유효합니다."})

@@ -49,8 +49,12 @@ app.json = CustomJSONProvider(app)
 
 
 @app.route('/')
-def hello_world():
-    return 'Hello World!'
+def home():
+    return render_template('login.html')
+
+@app.route('/main')
+def main():
+    return render_template('index.html')
 
 
 # 로그인

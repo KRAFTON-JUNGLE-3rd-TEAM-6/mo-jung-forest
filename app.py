@@ -191,7 +191,7 @@ def post_message():
             'result': 'fail'
         })
     
-    generatorId = request.cookies.get('id')  
+    generatorId = request.cookies.get('id')
 
     kst = pytz.timezone('Asia/Seoul')
     created_at = datetime.now(kst)
@@ -225,7 +225,7 @@ def post_vote():
             'result': 'fail'
         })
     
-    generatorId = request.cookies.get('id')  
+    generatorId = request.cookies.get('id')
 
     kst = pytz.timezone('Asia/Seoul')
     created_at = datetime.now(kst)
@@ -234,11 +234,7 @@ def post_vote():
         db.Vote.insert_one({
             "generatorId": generatorId,
             "title": post_data.get('title'),
-            "option1": post_data.get('option1'),
-            "option2": post_data.get('option2'),
-            "option3": post_data.get('option3'),
-            "option4": post_data.get('option4'),
-            "option5": post_data.get('option5'),
+            "option": post_data.get('option'),
             "createdAt": created_at
         })
         return jsonify({
@@ -256,7 +252,7 @@ def do_vote(voteId, optionId):
     refresh_token = request.cookies.get('refresh_token_cookie')
     validate_token(access_token, refresh_token)
 
-    voterId = request.cookies.get('id')  
+    voterId = request.cookies.get('id')
 
     existingVote = db.UserVote.find_one({
         "voterId": voterId,
@@ -281,6 +277,85 @@ def do_vote(voteId, optionId):
     except:
         return jsonify({
             'result': 'fail'
+        })
+
+# 메인 게시판 GET
+@app.route('/mainBoard', methods=['GET'])
+def show_main():
+    pageMaxNum = 4
+    pageNum = int(request.args.get('page'))
+    if pageNum <= 0:
+        print('전달된 Page 수가 이상합니다!!')
+        return jsonify({
+            'result': 'fail'
+        })
+    
+    dCount =db.BoardIndex.count_documents(filter={})
+    if dCount == 0:
+        print('showMain() : Data가 없어요!!')
+        return jsonify({
+            'result': 'fail'
+        })
+
+    print(dCount)
+
+    latest_BoardData = list(db.BoardIndex.find().sort([('createdAt', -1)]).skip((pageNum - 1) * pageMaxNum).limit(pageMaxNum))
+
+    if not latest_BoardData:
+        print('showMain() : Data 가져오기 실패!!')
+        return jsonify({
+            'result': 'fail'
+        })
+    
+    # 보낼 데이터 리스트
+    sendResult = []
+
+    # 현재 로그인한 유저 id
+    userId = request.cookies.get('id')
+
+    for board in latest_BoardData: # 데이터 파악 및 만들기
+        print(board)
+        if board['type'] == 'MESSAGE':
+            # 해당 테이블에서 data 찾기
+            boardData = db.Message.find_one({"_id" : ObjectId(board['postId'])})
+
+            jsData = {
+                "mode" : "MESSAGE",
+                "recepient": boardData['recipient'],
+			    "content": boardData['content'],
+            }
+            sendResult.append(jsData)
+        elif board['type'] == 'VOTE':
+            boardData = db.Vote.find_one({"_id" : ObjectId(board['postId'])})
+            options = boardData['option']
+            optionContents = []
+            optionCounts = []
+
+            for option in options:
+                optionContents.append(option['content'])
+                count = db.UserVote.count_documents({"voteId" : boardData['_id'] , "optionId" : option['optionId']})
+                optionCounts.append(count)
+
+            userVote = db.UserVote.find_one({"voteId" : boardData['_id'] , "voterId" : userId})
+
+            userOptionId = None
+            # 유저가 옵션을 정했다면 find_one의 결과값이 있으며 여기서 optionId 가져오기
+            if userVote is not None:
+                userOptionId = userVote['optionId']
+
+            jsData = {
+                "mode" : "VOTE",
+                "title": boardData['title'],
+			    "options": optionContents,
+                "optionCounts" : optionCounts,
+                "optionId" : userOptionId # none일 경우 아직 투표를 안한 것
+            }
+
+            sendResult.append(jsData)
+
+    return jsonify({
+        'result': 'success',
+        'data' : sendResult
         })
 
 

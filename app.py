@@ -191,7 +191,7 @@ def post_message():
             'result': 'fail'
         })
     
-    generatorId = request.cookies.get('id')  
+    generatorId = request.cookies.get('id')
 
     kst = pytz.timezone('Asia/Seoul')
     created_at = datetime.now(kst)
@@ -225,7 +225,7 @@ def post_vote():
             'result': 'fail'
         })
     
-    generatorId = request.cookies.get('id')  
+    generatorId = request.cookies.get('id')
 
     kst = pytz.timezone('Asia/Seoul')
     created_at = datetime.now(kst)
@@ -234,11 +234,7 @@ def post_vote():
         db.Vote.insert_one({
             "generatorId": generatorId,
             "title": post_data.get('title'),
-            "option1": post_data.get('option1'),
-            "option2": post_data.get('option2'),
-            "option3": post_data.get('option3'),
-            "option4": post_data.get('option4'),
-            "option5": post_data.get('option5'),
+            "option": post_data.get('option'),
             "createdAt": created_at
         })
         return jsonify({
@@ -256,7 +252,7 @@ def do_vote(voteId, optionId):
     refresh_token = request.cookies.get('refresh_token_cookie')
     validate_token(access_token, refresh_token)
 
-    voterId = request.cookies.get('id')  
+    voterId = request.cookies.get('id')
 
     existingVote = db.UserVote.find_one({
         "voterId": voterId,

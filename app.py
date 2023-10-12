@@ -1,5 +1,5 @@
 # import for flask app
-from datetime import timedelta
+from datetime import datetime, timedelta
 from flask import Flask, render_template, jsonify, request
 from jwt import ExpiredSignatureError
 from pymongo import MongoClient
@@ -10,6 +10,7 @@ from flask_jwt_extended import JWTManager, create_access_token, create_refresh_t
 
 # import for environment variables
 from dotenv import load_dotenv
+import pytz
 load_dotenv()
 import os
 
@@ -59,7 +60,10 @@ def login():
     input_user_id = requests.get("userId")
     input_password = requests.get("password")
 
-    user_info = db.User.find_one({ "userId": input_user_id, "status": "active" })
+    try:
+        user_info = db.User.find_one({ "userId": input_user_id, "status": "active" })
+    except:
+        return jsonify({"result": "fail", "data": "유저 찾기에 실패했습니다. 다시 시도해주세요."})
 
     if user_info is None:
         return jsonify({"result": "fail", "data": "아이디가 틀렸거나, 존재하지 않는 유저입니다."})
@@ -130,6 +134,46 @@ def logout():
     response.delete_cookie('name')
 
     return response
+
+
+# 회원가입
+@app.route("/users/register", methods=['POST'])
+def register():
+    requests = request.get_json()
+    input_user_id = requests.get("userId")
+    input_password = requests.get("password")
+    input_name = requests.get("name")
+
+    kst = pytz.timezone('Asia/Seoul')
+    created_at = datetime.now(kst)
+    
+    try:
+        db.User.insert_one({
+            "userId": input_user_id,
+            "password": input_password,
+            "name": input_name,
+            "status": "active",
+            "createdAt": created_at,
+        })
+        return jsonify({"result": "success", "data": "회원가입이 완료되었습니다."})
+    except:
+        return jsonify({"result": "fail", "data": "회원가입 시도에 실패하였습니다. 다시 시도해주세요."})
+
+
+@app.route("/users/check-id", methods=['POST'])
+def check_id():
+    requests = request.get_json()
+    input_user_id = requests.get("userId")
+
+    try: 
+        user_info = db.User.find_one({ "userId": input_user_id, "status": "active" })
+    except:
+        return jsonify({"result": "fail", "data": "아이디 체크에 실패하였습니다. 다시 시도해주세요."})
+
+    if user_info is None:
+        return jsonify({"result": "success", "data": "사용 가능한 아이디입니다."})
+    else:
+        return jsonify({"result": "fail", "data": "이미 존재하는 아이디입니다."})
 
 
 # 메세지 생성 기능

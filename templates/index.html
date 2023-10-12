@@ -243,7 +243,7 @@
                                     makeBeforeVoteCard(post.postId, post.title, post.options);
                                     updateCardWithEmotion(post.postId);
                                 } else {
-                                    makeAfterVoteCard(post.title, post.options,post.optionProportions, post.selectedOptionId);
+                                    makeAfterVoteCard(post.postId, post.title, post.options,post.optionProportions, post.selectedOptionId);
                                     updateCardWithEmotion(post.postId);
                                 }
                             }
@@ -353,12 +353,40 @@
                         </label>
                     </div>`;
             });
-            tempHtml += '</div>';
+            tempHtml += `
+                </div>
+                <div class="emoji-reaction-buttons">
+                    <button class="btn btn-emoji-reaction" value="0" onclick="react('${postId}', 0); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">❤️</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="1" onclick="react('${postId}', 1); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">🤣</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="2" onclick="react('${postId}', 2); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">😪</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="3" onclick="react('${postId}', 3); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">💢</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="4" onclick="react('${postId}', 4); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">🔥</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="5" onclick="react('${postId}', 5); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">❓</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                </div>
+            </div>`;
             $("#feed-box").append(tempHtml);
         }
 
-        function makeAfterVoteCard(title, options, optionProportions, selectedOptionId){
-            let tempHtml = `<div class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
+        function makeAfterVoteCard(postId, title, options, optionProportions, selectedOptionId){
+            let tempHtml = `<div id=${postId} class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
             <div class="card-header">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-mailbox2" viewBox="0 0 16 16">
                     <path d="M9 8.5h2.793l.853.854A.5.5 0 0 0 13 9.5h1a.5.5 0 0 0 .5-.5V8a.5.5 0 0 0-.5-.5H9v1z"/>
@@ -437,8 +465,34 @@
                 tempHtml += subHtml;
             }
 
-            tempHtml += `</div>`;
-
+            tempHtml += `
+                <div class="emoji-reaction-buttons">
+                    <button class="btn btn-emoji-reaction" value="0" onclick="react('${postId}', 0); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">❤️</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="1" onclick="react('${postId}', 1); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">🤣</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="2" onclick="react('${postId}', 2); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">😪</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="3" onclick="react('${postId}', 3); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">💢</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="4" onclick="react('${postId}', 4); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">🔥</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="5" onclick="react('${postId}', 5); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">❓</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                </div>
+            </div>`;
             $("#feed-box").append(tempHtml);
         }
 

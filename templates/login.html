@@ -18,7 +18,19 @@
     <script>
         $(document).ready(function() {
             validate_token_and_auto_login()
+
+            show_signup_modal()
+
         })
+
+        function show_signup_modal() {
+            const signupModal = document.getElementById('signupModal')
+            if (signupModal) {
+                signupModal.addEventListener('show.bs.modal', event => {
+                    const button = event.relatedTarget
+                })
+            }
+        }
 
         function validate_token_and_auto_login() {
             $.ajax({
@@ -122,23 +134,56 @@
             <div id="form_container">
                 <form name="loginForm" action="/users/login" method="post">
                     <div class="mb-3">
-                      <input id="userId" type="email" class="form-control" id="input-id" placeholder="아이디">
+                        <input id="userId" type="email" class="form-control" id="input-id" placeholder="아이디">
                     </div>
 
                     <div class="mb-3">
-                      <input id="password" type="password" class="form-control" id="inputPassword" placeholder="비밀번호">
+                        <input id="password" type="password" class="form-control" id="inputPassword" placeholder="비밀번호">
                     </div>
                     <div style="margin-bottom: 30px;"></div>
                     <div id="button_container">
-                        <button type="button" class="btn button flex-fill" style="margin-right: 10px;">회원가입</button>
+                        <button type="button" class="btn button flex-fill" style="margin-right: 10px;" data-bs-toggle="modal" data-bs-target="#signupModal">회원가입</button>
                         <button type="button" class="btn btn-primary flex-fill" onclick="login()">로그인</button>
                     </div>
-                  </form>
+                </form>
             </div>
         </div>
         <div id="img_container">
             <img id="half_circle_img" src="../static/img/half_circle_logo.png"  height="100%">
         </div>
+
+        <!---   회원가입 modal   -->
+        <div class="modal fade" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="signupModalLabel">회원가입</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="name" placeholder="이름">
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="userId" placeholder="아이디">
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="password" placeholder="비밀번호">
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="passwordCheck" placeholder="비밀번호 재확인">
+                    </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                    <button type="button" class="btn btn-primary">제출!</button>
+                </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </body>
 </html>

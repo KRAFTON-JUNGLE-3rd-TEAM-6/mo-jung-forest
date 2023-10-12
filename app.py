@@ -179,7 +179,7 @@ def check_id():
     if user_info is None:
         return jsonify({"result": "success", "data": "사용 가능한 아이디입니다."})
     else:
-        return jsonify({"result": "fail", "data": "이미 존재하는 아이디입니다."})
+        return jsonify({"result": "dsuccess", "data": "이미 존재하는 아이디입니다."})
 
 
 # 메세지 생성 기능

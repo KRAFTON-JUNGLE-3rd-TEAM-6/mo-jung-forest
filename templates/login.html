@@ -16,6 +16,8 @@
     <link href="../static/css/login.css" rel="stylesheet">
 
     <script>
+        var isIdCheckDone = false;
+
         $(document).ready(function() {
             validate_token_and_auto_login()
 
@@ -124,8 +126,12 @@
             var name = document.getElementById("register-name").value;
             var userId = document.getElementById("register-userId").value;
             var password = document.getElementById("register-password").value;
+            var passwordCheck = document.getElementById("register-passwordCheck").value;
+
+            result = validate_value(name, userId, password, passwordCheck);
             
-            $.ajax({
+            if(result == true) {
+                $.ajax({
                         type: "POST",
                         url: "/users/register",
                         contentType: "application/json; charset=utf-8",
@@ -142,9 +148,76 @@
                             alert(error);
                         }
                     })
+            }
         }
         
-        
+        function validate_value(name, userId, password, passwordCheck) {
+            if(name == "") {
+                alert("이름을 입력해주세요.");
+                return false;
+            } else if(userId == "") {
+                alert("아이디를 입력해주세요.");
+                return false;
+            } else if(password == "") {
+                alert("비밀번호를 입력해주세요.");
+                return false;
+            } else if(passwordCheck == "") {
+                alert("비밀번호를 재확인해주세요.");
+                return false;
+            } else if(password != passwordCheck) {
+                alert("비밀번호가 일치하지 않습니다.");
+                return false;
+            } 
+
+            if(isIdCheckDone == false) {
+                alert("아이디 중복확인을 해주세요.");
+                return false;
+            }
+
+            return true;
+        }
+
+        function checkId() {
+            var userId = document.getElementById("register-userId").value;
+            if(userId == "") {
+                alert("아이디를 입력해주세요.");
+                return false;
+            }
+
+            $.ajax({
+                        type: "POST",
+                        url: "/users/check-id",
+                        contentType: "application/json; charset=utf-8",
+                        data:  JSON.stringify( { 'userId': userId } ),
+                        dataType: "json",
+                        success: function(response) {
+                            if (response['result'] == 'success') {
+                                alert(response['data']);
+
+                                isIdCheckDone = true;
+                                var checkIdButton = document.getElementById("check-id-button");
+                                checkIdButton.classList.remove("button");
+                                checkIdButton.classList.add("btn-primary");
+                            } else if(response['result'] == 'dsuccess') {   // 존재하는 아이디인 경우
+                                alert(response['data']);
+                                isIdCheckDone = false;
+                                var checkIdButton = document.getElementById("check-id-button");
+                                checkIdButton.classList.remove("btn-primary");
+                                checkIdButton.classList.add("button");
+                            }else {  // 'fail'인 경우, 가이드 메시지
+                                alert(response['data']);
+                                isIdCheckDone = false;
+                                var checkIdButton = document.getElementById("check-id-button");
+                                checkIdButton.classList.remove("btn-primary");
+                                checkIdButton.classList.add("button");
+                            }
+                        }, error: function(error) {
+                            alert(error);
+                        }
+                    })
+
+            
+        }
     </script>
 </head>
 <body>
@@ -189,8 +262,9 @@
                     <div class="mb-3">
                         <input type="text" class="form-control" id="register-name" placeholder="이름">
                     </div>
-                    <div class="mb-3">
-                        <input type="text" class="form-control" id="register-userId" placeholder="아이디">
+                    <div class="mb-3" style="display: flex;">
+                        <input type="text" class="form-control" id="register-userId" style="margin-right: 10px;" placeholder="아이디">
+                        <button type="button" class="btn button" id="check-id-button" style="min-width: 100px;" onclick="checkId()">중복확인</button>
                     </div>
                     <div class="mb-3">
                         <input type="text" class="form-control" id="register-password" placeholder="비밀번호">

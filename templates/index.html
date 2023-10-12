@@ -14,7 +14,7 @@
         body {
             min-width: 360px;
         }
-        
+
         /* compatibility for tablet devices */
         @media (min-width: 820px) {
             .container{
@@ -77,14 +77,8 @@
             // 로그인 여부와 토큰 유효성 검사
             validate_token_and_check_login();
 
-            // $("#feed-box").empty();
-            // showFeed();
-            addConfirmEventOnVoteRadio();
-            addCharlimitEventOnMessageModal();
-            addSubmitEventOnMessageModal();
-            addCloseEventOnMessageModal();
-            addSubmitEventOnVoteModal();
-            addCloseEventOnVoteModal();
+            $("#feed-box").empty();
+            showMain(1);
         });
 
         // 투표 이벤트 리스너: 투표 시 확인 메세지 출력
@@ -160,8 +154,10 @@
                     data: JSON.stringify(formData),
                     success: function(response) {
                         console.log('Data submitted successfully:', response);
-                        $('#postMessage-title').val('');
+                        $('#postMessage-recipient').val('');
                         $('#postMessage-content').val('');
+                        $('#postMessage-postBtn').html(defaultBtnText);
+                        $('#postMessageModal').modal('hide');
                     },
                     error: function(err) {
                         console.error('Error:', err);
@@ -174,7 +170,7 @@
         // 메세지 작성 이벤트 리스너: close 버튼
         function addCloseEventOnMessageModal() {
             $('#postMessage-closeBtn').click(function () {
-                $('#postMessage-title').val('');
+                $('#postMessage-recipient').val('');
                 $('#postMessage-content').val('');
             });
         }
@@ -204,7 +200,7 @@
                     title: voteTitle,
                     option: voteOptions
                 };
-                
+
                 $.ajax({
                     type: 'POST',
                     url: 'http://127.0.0.1:5000/votes',
@@ -216,6 +212,8 @@
                         $('[id^="postVote-option"]').each((index, element) => {
                             element.value = '';
                         });
+                        $('#postVote-postBtn').html(defaultBtnText);
+                        $('#postVoteModal').modal('hide');
                     },
                     error: function(err) {
                         console.error('Error:', err);
@@ -236,8 +234,8 @@
             });
         }
 
-        function showMain(pageNum){
-            $.ajax({
+        async function showMain(pageNum){
+            await $.ajax({
                     type: "GET",
                     url: "/mainBoard?page=" + pageNum,
                     data: {},
@@ -245,33 +243,28 @@
                         // HTTP 통신 성공이지만 메세지가 success가 아닌 경우 (드물 것으로 예상)
                         if (response.result !== "success")
                         return;
-                    
+
                         for (const post of response.data) {
+                            console.log("post is: ");
                             console.dir(post);
                             if (post.mode == "MESSAGE"){
-                                const recipient = post.recipient;
-                                const content = post.content;
-                                //let reactionId = data['reactionId'];
-                                //let reactions = data['reactions'];  // list
-                                makeMessageCard(recipient, content);
+                                makeMessageCard(post.postId, post.recipient, post.content);
                                 continue;
                             }
                             if (post.mode == "VOTE") {
-                                const title = post.title;
-                                const options = post.options;
                                 console.log("vote is selected");
                                 console.log("optionProportions is: " + post.optionProportions);
                                 if (!post.selectedOptionId) {
                                     console.log("user hasn't voted yet");
-                                    makeBeforeVoteCard(title, options);
+                                    makeBeforeVoteCard(post.postId, post.title, post.options);
                                     continue;
                                 }
                                 console.log("user has already voted");
-                                makeAfterVoteCard(title, options, post.selectedOptionId);
+                                makeAfterVoteCard(post.postId, post.title, post.options, post.selectedOptionId);
                                 continue;
                             }
                         }
-                        
+
                             // 선택된 페이지 (defalut : 1)
                             // let page = response['page'];
 
@@ -280,52 +273,85 @@
                         console.log(error);
                     }
                 });
+
+            addConfirmEventOnVoteRadio();
+            addCharlimitEventOnMessageModal();
+            addSubmitEventOnMessageModal();
+            addCloseEventOnMessageModal();
+            addSubmitEventOnVoteModal();
+            addCloseEventOnVoteModal();
+
         }
 
-        function makeMessageCard(recipient, content) {
-            let tempHtml = `<div class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
-            <div class="card-header">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chat-right-dots-fill" viewBox="0 0 16 16">
-                    <path d="M16 2a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9.586a1 1 0 0 1 .707.293l2.853 2.853a.5.5 0 0 0 .854-.353V2zM5 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 1a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
-                </svg>
-                익명의 사용자가 <b>${recipient}</b>에게 메세지를 남겼습니다
-            </div>
-            <div class="card-body d-flex flex-column justify-content-center">
-                ${content}
-            </div>
-            </div>`
+        function makeMessageCard(postId, recipient, content) {
+            const tempHtml = `
+            <div id="${postId}" class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chat-right-dots-fill" viewBox="0 0 16 16">
+                        <path d="M16 2a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9.586a1 1 0 0 1 .707.293l2.853 2.853a.5.5 0 0 0 .854-.353V2zM5 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 1a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+                    </svg>
+                    익명의 사용자가 <b>${recipient}</b>에게 메세지를 남겼습니다
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center">
+                    ${content}
+                </div>
+                <div class="emoji-reaction-buttons">
+                    <button class="btn btn-emoji-reaction" value="0" onclick="react('${postId}', 0)"> <!-- 코드 스니펫 생성 시 postId가 string으로 들어가야 함 -->
+                        <div class="emoji-btn-field">❤️</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="1" onclick="react('65274b3280920e306bdc1145', 1)">
+                        <div class="emoji-btn-field">🤣</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="2" onclick="react('65274b3280920e306bdc1145', 2)">
+                        <div class="emoji-btn-field">😪</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="3" onclick="react('65274b3280920e306bdc1145', 3)">
+                        <div class="emoji-btn-field">💢</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="4" onclick="react('65274b3280920e306bdc1145', 4)">
+                        <div class="emoji-btn-field">🔥</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="5" onclick="react('65274b3280920e306bdc1145', 5)">
+                        <div class="emoji-btn-field">❓</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                </div>
+            </div>`;
             $("#feed-box").append(tempHtml);
         }
 
-        function makeBeforeVoteCard(title, options){
+        function makeBeforeVoteCard(postId, title, options){
+            let tempHtml = `
+            <div class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
+                <div class="card-header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-mailbox2-flag" viewBox="0 0 16 16">
+                        <path d="M10.5 8.5V3.707l.854-.853A.5.5 0 0 0 11.5 2.5v-2A.5.5 0 0 0 11 0H9.5a.5.5 0 0 0-.5.5v8h1.5Z"/>
+                        <path d="M4 3h4v1H6.646A3.99 3.99 0 0 1 8 7v6h7V7a3 3 0 0 0-3-3V3a4 4 0 0 1 4 4v6a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V7a4 4 0 0 1 4-4Zm.585 4.157C4.836 7.264 5 7.334 5 7a1 1 0 0 0-2 0c0 .334.164.264.415.157C3.58 7.087 3.782 7 4 7c.218 0 .42.086.585.157Z"/>
+                    </svg>
+                    익명의 사용자가 투표를 남겼습니다: <b>"${title}"</b>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-center">`;
 
-            let tempHtml = `<div class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
-            <div class="card-header">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-mailbox2-flag" viewBox="0 0 16 16">
-                    <path d="M10.5 8.5V3.707l.854-.853A.5.5 0 0 0 11.5 2.5v-2A.5.5 0 0 0 11 0H9.5a.5.5 0 0 0-.5.5v8h1.5Z"/>
-                    <path d="M4 3h4v1H6.646A3.99 3.99 0 0 1 8 7v6h7V7a3 3 0 0 0-3-3V3a4 4 0 0 1 4 4v6a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V7a4 4 0 0 1 4-4Zm.585 4.157C4.836 7.264 5 7.334 5 7a1 1 0 0 0-2 0c0 .334.164.264.415.157C3.58 7.087 3.782 7 4 7c.218 0 .42.086.585.157Z"/>
-                </svg>
-                익명의 사용자가 투표를 남겼습니다: <strong>"${title}"</strong>
-            </div>
-            <div class="card-body d-flex flex-column justify-content-center">`;
-            for(let i = 0; i < options.length;i++){
-                let subHtml =`<div class="form-check">
-                    <input class="form-check-input" type="radio" name="optionRadio">
-                    <label class="form-check-label" for="optionRadio1">
-                        ${options['content']}
-                    </label>
-                </div>`;
-
-                tempHtml += subHtml;
-            }
-
-            tempHtml += `</div>`;
-
+            options.forEach((e, i) => {
+                tempHtml += `
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="voteOption" value="${i}">
+                        <label class="form-check-label">
+                            ${e.content}
+                        </label>
+                    </div>`;
+            });
+            tempHtml += '</div>';
             $("#feed-box").append(tempHtml);
         }
 
-        function makeAfterVoteCard(title, options, selectedOptionId){
-            let tempHtml = `<h2 class="text-muted">익명의 사용자가 투표를 남겼습니다:<strong>"${title}"</strong> </h2>`;
+        function makeAfterVoteCard(postId, title, options, selectedOptionId){
+            let tempHtml = `<h2 class="text-muted">익명의 사용자가 투표를 남겼습니다:<b>"${title}"</b> </h2>`;
             let max = 0;
             // for(let i = 0; i < optionCounts.length;i++){
             //     if(optionCounts)
@@ -425,13 +451,13 @@
                 }
             })
         }
-        
+
         function validate_token_and_check_login() {
             $.ajax({
                         type: "GET",
                         url: "/auth/check",
                         contentType: "application/json; charset=utf-8",
-                        success: function(response) { 
+                        success: function(response) {
                             if (response['result'] == 'success') {
                                 // 그대로 있는다.
                             } else if(response['result'] == 'afail') {  // 'afail'인 경우, 액세스 토큰 재갱신 의사를 물어봄
@@ -462,13 +488,13 @@
                                             } else {  // 'fail'인 경우, 가이드 메시지
                                                 alert(response['data']);
                                             }
-                                            
+
                                         }, error: function(error) {
                                             alert(error);
                                         }
                                     })
                                 }
-                            } else if(response['result'] == 'rfail') { // 'rfail'인 경우, 로그아웃 처리        
+                            } else if(response['result'] == 'rfail') { // 'rfail'인 경우, 로그아웃 처리
                             $.ajax({
                                         type: "GET",
                                         url: "/users/logout",
@@ -480,7 +506,7 @@
                                             } else {  // 'fail'인 경우, 가이드 메시지
                                                 alert(response['data']);
                                             }
-                                            
+
                                         }, error: function(error) {
                                             alert(error);
                                         }
@@ -529,7 +555,7 @@
                 잘생겼어요
             </div>
             <div class="emoji-reaction-buttons">
-                <button class="btn btn-emoji-reaction" value="0" onclick="react('65274b3280920e306bdc1145', 0)"> <!-- 코드 스니펫 생성 시 postId가 string으로 들어가야 함 --> 
+                <button class="btn btn-emoji-reaction" value="0" onclick="react('65274b3280920e306bdc1145', 0)"> <!-- 코드 스니펫 생성 시 postId가 string으로 들어가야 함 -->
                     <div class="emoji-btn-field">❤️</div>
                     <div class="emoji-count-field">0</div>
                 </button>
@@ -734,6 +760,6 @@
             </div>
         </div>
     </div>
-    
+
 </body>
 </html>

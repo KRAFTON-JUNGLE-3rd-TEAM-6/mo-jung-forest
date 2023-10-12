@@ -75,9 +75,13 @@ def login():
     access_token = create_access_token(identity=id, additional_claims={"id": id, "name": name})
     refresh_token = create_refresh_token(identity=id)
 
-    validate_token(access_token)
+    # 주석처리해야함
+    validate_token(access_token, refresh_token)
 
-    response = jsonify({"access_token": access_token, "refresh_token": refresh_token})
+    response = jsonify({"result": "fail", "data": {
+        "access_token": access_token, 
+        "refresh_token": refresh_token
+    }})
     set_access_cookies(response, access_token) 
     set_refresh_cookies(response, refresh_token)
 
@@ -85,19 +89,6 @@ def login():
     response.set_cookie('name', name)
 
     return response
-
-
-#############################################################################
-############################### util 함수 ###################################
-#############################################################################
-
-
-def validate_token(access_token):
-    try:
-        decode_token(access_token).get(app.config["JWT_SECRET_KEY"], None)
-        print("token is valid")
-    except ExpiredSignatureError: 
-        return render_template('login.html')
 
 
 # 메세지 생성 기능
@@ -200,6 +191,27 @@ def do_vote(voteId, optionId):
         return jsonify({
             'result': 'fail'
         })
+
+
+#############################################################################
+############################### util 함수 ###################################
+#############################################################################
+
+
+# 로그인이 필요한 api에서 사용하여 토큰이 유효한지 확인하는 함수
+def validate_token(access_token, refresh_token):
+    try:
+        decode_token(access_token).get(app.config["JWT_SECRET_KEY"], None)
+        print("access token is valid")
+    except ExpiredSignatureError: 
+        return jsonify({"result": "fail", "data": "로그인 유지 시간이 만료되었습니다. 연장하시겠습니까?"})
+    
+    try:
+        decode_token(refresh_token).get(app.config["JWT_SECRET_KEY"], None)
+        print("refresh token is valid")
+    except ExpiredSignatureError: 
+
+        return jsonify({"result": "fail", "data": "로그인한 시간이 오래되었습니다. 다시 로그인해주세요."})
 
 
 if __name__ == '__main__':

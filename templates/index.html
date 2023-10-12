@@ -83,7 +83,6 @@
             // validate_token_and_check_login();
             
             showMain(currentPage);
-            showMain(1);
         });
 
         // 투표 이벤트 리스너: 투표 시 확인 메세지 출력
@@ -290,7 +289,7 @@
             addCloseEventOnMessageModal();
             addSubmitEventOnVoteModal();
             addCloseEventOnVoteModal();
-
+            addPageEventListener();
         }
 
         function makeMessageCard(postId, recipient, content) {

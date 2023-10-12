@@ -52,6 +52,7 @@ def hello_world():
     return 'Hello World!'
 
 
+# 로그인
 @app.route("/users/login", methods=['POST'])
 def login():
     requests = request.get_json()
@@ -74,9 +75,6 @@ def login():
     # 로그인 성공, 토큰 발급
     access_token = create_access_token(identity=id, additional_claims={"id": id, "name": name})
     refresh_token = create_refresh_token(identity=id)
-
-    ########### 주석처리해야함
-    validate_token(access_token, refresh_token)
 
     response = jsonify({"result": "success", "data": {
         "access_token": access_token, 

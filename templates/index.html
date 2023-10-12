@@ -92,31 +92,6 @@
             
         });
 
-        // 투표 이벤트 리스너: 투표 시 확인 메세지 출력
-        function addConfirmEventOnVoteRadio() {
-            $('input[type=radio][name=voteOption]').change(function() {
-                if (confirm('정말 투표하시겠습니까?')) {
-                    const voteId = "65274b3280920e306bdc1145";      // 임시 하드코딩, 카드HTML에서 동적으로 불러와야 함
-                    const optionId = this.value;
-                    $.ajax({
-                        type: 'POST',
-                        url: `http://127.0.0.1:5000/votes/${voteId}/options/${optionId}`,
-                        contentType: 'application/json',
-                        // data: JSON.stringify(formData),
-                        success: function(response) {
-                            console.log('Data submitted successfully:', response);
-                        },
-                        error: function(err) {
-                            console.error('Error:', err);
-                        }
-                    });
-                    // 투표 결과 카드로 갈아끼기
-                } else {
-                    $('input[type=radio][name=voteOption]').prop('checked', false);
-                }
-            });
-        }
-
         // 메세지 작성 이벤트 리스너: 실시간 글자 수 제한
         function addCharlimitEventOnMessageModal() {
             const messageInput = $('#postMessage-content');
@@ -262,18 +237,15 @@
                             if (post.mode == "MESSAGE"){
                                 makeMessageCard(post.postId, post.recipient, post.content);
                                 updateCardWithEmotion(post.postId);
-                                continue;
                             }
-                            if (post.mode == "VOTE") {
-                                if (!post.selectedOptionId) {
+                            else if (post.mode == "VOTE") {
+                                if (!post.hasOwnProperty('selectedOptionId')) {
                                     makeBeforeVoteCard(post.postId, post.title, post.options);
                                     updateCardWithEmotion(post.postId);
-                                    continue;
+                                } else {
+                                    makeAfterVoteCard(post.postId, post.title, post.options,post.optionProportions, post.selectedOptionId);
+                                    updateCardWithEmotion(post.postId);
                                 }
-                                console.log("user has already voted");
-                                makeAfterVoteCard(post.title, post.options,post.optionProportions, post.selectedOptionId);
-                                updateCardWithEmotion(post.postId);
-                                continue;
                             }
                         }
 
@@ -289,7 +261,6 @@
                     }
                 });
 
-            addConfirmEventOnVoteRadio();
             addCharlimitEventOnMessageModal();
             addSubmitEventOnMessageModal();
             addCloseEventOnMessageModal();
@@ -340,6 +311,27 @@
             $("#feed-box").append(tempHtml);
         }
 
+        // 투표 온클릭 이벤트
+        function vote(postId, optionId) {
+            if (confirm('정말 투표하시겠습니까?')) {
+                $.ajax({
+                    type: 'POST',
+                    url: `/votes/${postId}/options/${optionId}`,
+                    contentType: 'application/json',
+                    // data: JSON.stringify(formData),
+                    success: function(response) {
+                        console.log('Data submitted successfully:', response);
+                        showMain(currentPage);
+                    },
+                    error: function(err) {
+                        console.error('Error:', err);
+                    }
+                });
+            } else {
+                $('input[type=radio][name=voteOption]').prop('checked', false);
+            }
+        }
+
         function makeBeforeVoteCard(postId, title, options){
             let tempHtml = `
             <div id="${postId}" class="card mb-3 shadow-lg bg-light" style="height: 216.45px;box-shadow: rgba(0, 255, 8, 0.12) 5px 5px, rgba(0, 255, 8, 0.12) 10px 10px, rgba(0, 255, 8, 0.12) 15px 15px, rgba(0, 255, 8, 0.12) 20px 20px, rgba(0, 255, 8, 0.12) 25px 25px;">
@@ -355,18 +347,46 @@
             options.forEach((e, i) => {
                 tempHtml += `
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="voteOption" value="${i}">
+                        <input class="form-check-input" type="radio" name="voteOption" onclick="vote('${postId}', '${e.optionId}')">
                         <label class="form-check-label">
                             ${e.content}
                         </label>
                     </div>`;
             });
-            tempHtml += '</div>';
+            tempHtml += `
+                </div>
+                <div class="emoji-reaction-buttons">
+                    <button class="btn btn-emoji-reaction" value="0" onclick="react('${postId}', 0); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">❤️</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="1" onclick="react('${postId}', 1); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">🤣</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="2" onclick="react('${postId}', 2); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">😪</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="3" onclick="react('${postId}', 3); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">💢</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="4" onclick="react('${postId}', 4); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">🔥</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="5" onclick="react('${postId}', 5); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">❓</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                </div>
+            </div>`;
             $("#feed-box").append(tempHtml);
         }
 
-        function makeAfterVoteCard(title, options,optionProportions,selectedOptionId){
-            let tempHtml = `<div class="card mb-3 shadow-lg bg-light" style="height: 216.45px;box-shadow: rgba(0, 255, 8, 0.12) 5px 5px, rgba(0, 255, 8, 0.12) 10px 10px, rgba(0, 255, 8, 0.12) 15px 15px, rgba(0, 255, 8, 0.12) 20px 20px, rgba(0, 255, 8, 0.12) 25px 25px;">
+        function makeAfterVoteCard(postId, title, options, optionProportions, selectedOptionId){
+            let tempHtml = `<div id=${postId} class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
             <div class="card-header">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-mailbox2" viewBox="0 0 16 16">
                     <path d="M9 8.5h2.793l.853.854A.5.5 0 0 0 13 9.5h1a.5.5 0 0 0 .5-.5V8a.5.5 0 0 0-.5-.5H9v1z"/>
@@ -445,8 +465,34 @@
                 tempHtml += subHtml;
             }
 
-            tempHtml += `</div>`;
-
+            tempHtml += `
+                <div class="emoji-reaction-buttons">
+                    <button class="btn btn-emoji-reaction" value="0" onclick="react('${postId}', 0); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">❤️</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="1" onclick="react('${postId}', 1); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">🤣</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="2" onclick="react('${postId}', 2); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">😪</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="3" onclick="react('${postId}', 3); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">💢</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="4" onclick="react('${postId}', 4); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">🔥</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                    <button class="btn btn-emoji-reaction" value="5" onclick="react('${postId}', 5); updateCardWithEmotion('${postId}');">
+                        <div class="emoji-btn-field">❓</div>
+                        <div class="emoji-count-field">0</div>
+                    </button>
+                </div>
+            </div>`;
             $("#feed-box").append(tempHtml);
         }
 
@@ -560,7 +606,6 @@
         function addPageEventListener(){
                 $('#pagination-box .page-link').on('click', function(event) {
                 const page = $(this).data('page');
-                console.log(page);
                 event.preventDefault();
                 
                 if (page) {
@@ -596,9 +641,6 @@
             if(pageEnd > totalPage){
                 pageEnd = totalPage;
             }
-
-            console.log(pageStart);
-            console.log(pageEnd);
 
             $("#pagination-box").empty();
 

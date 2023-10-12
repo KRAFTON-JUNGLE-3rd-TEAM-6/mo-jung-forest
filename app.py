@@ -286,13 +286,13 @@ def do_vote(voteId, optionId):
         return make_response(jsonify({
             'result': 'fail',
             'message': '이미 투표하셨습니다.'
-        }), 400)
+        }), 200)
     
     try:
         db.UserVote.insert_one({
             "voterId": voterId,
             "voteId": voteId,
-            "optionId": optionId,
+            "optionId": int(optionId),
         })
         return make_response(jsonify({
             'result': 'success'
@@ -466,6 +466,7 @@ def show_main():
                 "optionProportions": [{key: value} for key, value in key_counts.items()]
             }
             if currentUserVote:
+                print("currentUserVote: ", currentUserVote)
                 voteObj['selectedOptionId'] = currentUserVote['optionId']
 
             objList.append(voteObj)
@@ -473,7 +474,7 @@ def show_main():
     return make_response(jsonify({
         'result': 'success',
         'totalPage' : total_pages,
-        'Page' : requestedPage,
+        'page' : requestedPage,
         'data': objList
     }), 200)
 

@@ -63,13 +63,18 @@
             align-items: center;
         }
 
+        .btn-emoji-reaction.selected {
+            background-color: #6ddead;
+        }
+
+
         .emoji-count-field {
             font-size: 14px;
             flex-grow: 1;
         }
 
 
-        .btn-emoji-reaction:hover {
+        .btn-emoji-reaction:not(.selected):hover {
             background-color: #ddd;
         }
 
@@ -253,27 +258,26 @@
                         $("#feed-box").empty();
 
                         for (const post of response.data) {
-                            console.log("post is: ");
                             console.dir(post);
                             if (post.mode == "MESSAGE"){
                                 makeMessageCard(post.postId, post.recipient, post.content);
+                                updateCardWithEmotion(post.postId);
                                 continue;
                             }
                             if (post.mode == "VOTE") {
-                                console.log("vote is selected");
-                                console.log("optionProportions is: " + post.optionProportions);
                                 if (!post.selectedOptionId) {
-                                    console.log("user hasn't voted yet");
                                     makeBeforeVoteCard(post.postId, post.title, post.options);
+                                    updateCardWithEmotion(post.postId);
                                     continue;
                                 }
                                 console.log("user has already voted");
                                 makeAfterVoteCard(post.title, post.options,post.optionProportions, post.selectedOptionId);
+                                updateCardWithEmotion(post.postId);
                                 continue;
                             }
                         }
 
-                            // 선택된 페이지 (defalut : 1)
+                        // 선택된 페이지 (defalut : 1)
                         totalPage = response['totalPage'];
                         currentPage = response['page'];
 
@@ -307,27 +311,27 @@
                     ${content}
                 </div>
                 <div class="emoji-reaction-buttons">
-                    <button class="btn btn-emoji-reaction" value="0" onclick="react('${postId}', 0)"> <!-- 코드 스니펫 생성 시 postId가 string으로 들어가야 함 -->
+                    <button class="btn btn-emoji-reaction" value="0" onclick="react('${postId}', 0); updateCardWithEmotion('${postId}');">
                         <div class="emoji-btn-field">❤️</div>
                         <div class="emoji-count-field">0</div>
                     </button>
-                    <button class="btn btn-emoji-reaction" value="1" onclick="react('65274b3280920e306bdc1145', 1)">
+                    <button class="btn btn-emoji-reaction" value="1" onclick="react('${postId}', 1); updateCardWithEmotion('${postId}');">
                         <div class="emoji-btn-field">🤣</div>
                         <div class="emoji-count-field">0</div>
                     </button>
-                    <button class="btn btn-emoji-reaction" value="2" onclick="react('65274b3280920e306bdc1145', 2)">
+                    <button class="btn btn-emoji-reaction" value="2" onclick="react('${postId}', 2); updateCardWithEmotion('${postId}');">
                         <div class="emoji-btn-field">😪</div>
                         <div class="emoji-count-field">0</div>
                     </button>
-                    <button class="btn btn-emoji-reaction" value="3" onclick="react('65274b3280920e306bdc1145', 3)">
+                    <button class="btn btn-emoji-reaction" value="3" onclick="react('${postId}', 3); updateCardWithEmotion('${postId}');">
                         <div class="emoji-btn-field">💢</div>
                         <div class="emoji-count-field">0</div>
                     </button>
-                    <button class="btn btn-emoji-reaction" value="4" onclick="react('65274b3280920e306bdc1145', 4)">
+                    <button class="btn btn-emoji-reaction" value="4" onclick="react('${postId}', 4); updateCardWithEmotion('${postId}');">
                         <div class="emoji-btn-field">🔥</div>
                         <div class="emoji-count-field">0</div>
                     </button>
-                    <button class="btn btn-emoji-reaction" value="5" onclick="react('65274b3280920e306bdc1145', 5)">
+                    <button class="btn btn-emoji-reaction" value="5" onclick="react('${postId}', 5); updateCardWithEmotion('${postId}');">
                         <div class="emoji-btn-field">❓</div>
                         <div class="emoji-count-field">0</div>
                     </button>
@@ -338,7 +342,7 @@
 
         function makeBeforeVoteCard(postId, title, options){
             let tempHtml = `
-            <div class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
+            <div id="${postId}" class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
                 <div class="card-header">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-mailbox2-flag" viewBox="0 0 16 16">
                         <path d="M10.5 8.5V3.707l.854-.853A.5.5 0 0 0 11.5 2.5v-2A.5.5 0 0 0 11 0H9.5a.5.5 0 0 0-.5.5v8h1.5Z"/>
@@ -368,7 +372,7 @@
                     <path d="M9 8.5h2.793l.853.854A.5.5 0 0 0 13 9.5h1a.5.5 0 0 0 .5-.5V8a.5.5 0 0 0-.5-.5H9v1z"/>
                     <path d="M12 3H4a4 4 0 0 0-4 4v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V7a4 4 0 0 0-4-4zM8 7a3.99 3.99 0 0 0-1.354-3H12a3 3 0 0 1 3 3v6H8V7zm-3.415.157C4.42 7.087 4.218 7 4 7c-.218 0-.42.086-.585.157C3.164 7.264 3 7.334 3 7a1 1 0 0 1 2 0c0 .334-.164.264-.415.157z"/>
                 </svg>
-                이미 투표하셨습니다: <strong>"${title}"</strong>
+                이미 투표하셨습니다: <b>"${title}"</b>
             </div>
             <div class="card-body d-flex flex-column justify-content-center">`;
 
@@ -402,7 +406,7 @@
                 let rate = objValue / max * 100;
                 let tooltipTitle = ""
                 console.log(obj);
-                
+
                 if (selectedOptionId == obj) {
                     tooltipTitle = "내가 선택한 답변"
                 }
@@ -448,29 +452,26 @@
 
         function react(postId, emojiId) {
             const requestEmojiId = parseInt(emojiId);
-            console.log("requestEmojiId: ", requestEmojiId);
             const storedEmote = getEmotion(postId);
-            console.log("storedEmote: ", storedEmote);
 
             // 반응 이력이 없는 경우 => POST
             if (!storedEmote) {
-                console.log("posting...");
-                postEmotion(postId, emojiId);
+                postEmotion(postId, requestEmojiId);
+                // updateCardWithEmotion(postId);
                 return;
             }
             // 반응 이력이 있는 경우
             // (1) 요청 반응과 저장 반응이 같다면 취소 요청 => DELETE
             const storedEmojiId = storedEmote.emojiId;
-            console.log("storedEmojiId: ", storedEmojiId);
             if (requestEmojiId === storedEmojiId) {
-                console.log("deleting...");
                 deleteEmotion(postId, requestEmojiId);
+                // updateCardWithEmotion(postId);
                 return;
             }
             // (2) 요청 반응과 저장 반응이 다르다면 업데이트 요청 => DELETE and POST
-            console.log("updating...");
             deleteEmotion(postId, storedEmojiId);
             postEmotion(postId, requestEmojiId);
+            // updateCardWithEmotion(postId);
         }
 
         function getEmotion(postId) {
@@ -496,6 +497,7 @@
                 type: 'POST',
                 url: '/reactions',
                 contentType: 'application/json',
+                async: false,
                 data: JSON.stringify({
                     postId: postId,
                     emojiId: emojiId
@@ -514,6 +516,7 @@
                 type: 'DELETE',
                 url: '/reactions',
                 contentType: 'application/json',
+                async: false,
                 data: JSON.stringify({
                     postId: postId,
                     emojiId: emojiId
@@ -528,13 +531,36 @@
             })
         }
 
-        function addToolTipEventLister(){
-            $('[data-toggle="tooltip"]').tooltip({placement: 'right',trigger: 'manual'}).tooltip('show');
+        async function updateCardWithEmotion(postId) {
+            await $.ajax({
+                type: 'GET',
+                url: '/allreactions/' + postId,
+                contentType: 'application/json',
+                success: function(response) {                    
+                    const emotes = response.storedEmotes;
+                    
+                    const zeroToFive = Array.from(Array(6).keys());
+                    for (const figure of zeroToFive) {
+                        const oldCount = $(`#${postId} .btn-emoji-reaction[value=${figure}] .emoji-count-field`).text();
+                        const newCount = emotes.filter(emote => emote.emojiId === figure).length;
+                        $(`#${postId} .btn-emoji-reaction[value=${figure}] .emoji-count-field`).text(newCount);
+                        // console.log(`figuring ${figure}... ${oldCount} => ${newCount}`)
+                    };
+
+                    $(`#${postId} .btn-emoji-reaction`).removeClass('selected');
+                    $(`#${postId} .btn-emoji-reaction[value=${response.selectedEmojiId}]`).addClass('selected');
+
+                },
+                error: function(err) {
+                    console.error('Error:', err);
+                }
+            })
         }
 
         function addPageEventListener(){
                 $('#pagination-box .page-link').on('click', function(event) {
                 const page = $(this).data('page');
+                console.log(page);
                 event.preventDefault();
                 
                 if (page) {
@@ -542,9 +568,12 @@
                 }
             });
 
-            $('#pagination-box .page-link-previous').on('click', function(event) {
+            const pagiNationMaxNum = 5;
+
+            // '이전' 버튼을 눌렀을 때
+            $('#pagination-box .page-link-previous').on('click', function (event) {
                 event.preventDefault();
-                if (currentPage > 1) {
+                if (currentPage > pagiNationMaxNum) {
                     makePagiNation(currentPage - pagiNationMaxNum);
                 }
             });
@@ -556,33 +585,35 @@
                     makePagiNation(currentPage + pagiNationMaxNum);
                 }
             });
+
         }
 
         function makePagiNation(totalPage,pageNum){
             const pagiNationMaxNum = 5;
-            let pageShare = Math.floor(pageNum / pagiNationMaxNum);
-            let pageStart = pagiNationMaxNum * pageShare;
-            let pageEnd = pagiNationMaxNum * pageShare + 5;
+            let pageStart = Math.max(1, pageNum - pagiNationMaxNum);
+            let pageEnd = Math.min(totalPage, pageNum + pagiNationMaxNum);
 
             if(pageEnd > totalPage){
                 pageEnd = totalPage;
             }
 
-            console.log(pageShare);
             console.log(pageStart);
             console.log(pageEnd);
 
             $("#pagination-box").empty();
 
-            let tempHtml = `<ul class="pagination">
-                <li class="page-item">
+            let tempHtml = `<ul class="pagination">`;
+
+            if (pageStart > pagiNationMaxNum) {
+            tempHtml += `<li class="page-item">
                     <a class="page-link" href="#" aria-label="Previous">
                         <span aria-hidden="true">&laquo;</span>
                         <span class="sr-only">이전</span>
                     </a>
                 </li>`;
+            }
             
-            for(let i = pageStart + 1; i <= pageEnd;i++){
+            for(let i = pageStart; i <= pageEnd;i++){
                 let subHtml =`<li class="page-item">
                     <a class="page-link" href="#" data-page="${i}">${i}</a>
                     </li>`;
@@ -590,16 +621,20 @@
                 tempHtml += subHtml;
             }
 
+            if (pageEnd < totalPage) {
             tempHtml += `<li class="page-item">
                     <a class="page-link" href="#" aria-label="Next">
                         <span aria-hidden="true">&raquo;</span>
                         <span class="sr-only">다음</span>
                     </a>
-                </li>
-            </ul>`;
+                </li>`;
+            }
+
+            tempHtml += `</ul>`;
 
             $("#pagination-box").append(tempHtml);
         }
+        
         function validate_token_and_check_login() {
             $.ajax({
                         type: "GET",
@@ -674,7 +709,7 @@
     <div id="mypage-box" class="container">
         <div class="d-flex justify-content-end">
             <i class="bi bi-person-square" style="font-size: 19px;margin-top: 7px;margin-right: 10px;"></i>
-            
+
             <span id="user-name-header" class="mt-2 text-muted">{{ userName }}</span>
             <span  class="mt-2 text-muted">님 안녕하세요</span>
         </div>
@@ -702,7 +737,7 @@
                 잘생겼어요
             </div>
             <div class="emoji-reaction-buttons">
-                <button class="btn btn-emoji-reaction" value="0" onclick="react('65274b3280920e306bdc1145', 0)"> <!-- 코드 스니펫 생성 시 postId가 string으로 들어가야 함 -->
+                <button class="btn btn-emoji-reaction" value="0" onclick="react('65274b3280920e306bdc1145', 0)">
                     <div class="emoji-btn-field">❤️</div>
                     <div class="emoji-count-field">0</div>
                 </button>

@@ -92,11 +92,31 @@ def login():
 
 
 @app.route("/auth/check", methods=['GET'])
-def checkLoginFirst():
+def check_login_first():
     access_token = request.cookies.get('access_token')
     refresh_token = request.cookies.get('refresh_token')
 
     return validate_token(access_token, refresh_token)
+
+
+# access token 재발급
+@app.route("/auth/refresh", methods=['GET'])
+def refresh_access_token():
+    refresh_token = request.cookies.get('refresh_token')
+
+    if refresh_token is None:
+        return jsonify({"result": "fail", "data": "로그인이 필요합니다."})
+    
+    id = request.cookies.get('id')
+    name = request.cookies.get('name')
+
+    access_token = create_access_token(identity=id, additional_claims={"id": id, "name": name})
+    response = jsonify({"result": "success", "data": {
+        "access_token": access_token
+    }})
+    set_access_cookies(response, access_token)
+
+    return response
 
 
 # 메세지 생성 기능

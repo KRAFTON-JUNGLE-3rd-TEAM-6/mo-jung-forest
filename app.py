@@ -391,6 +391,8 @@ def show_main():
             'message': 'No post in the database.'
         }), 204)
     
+    total_pages = (totalPostNum + POST_PER_PAGE - 1) // POST_PER_PAGE
+    print(total_pages)
     # 최신 게시글 조회
     pagedPosts = list(db.BoardIndex.find().sort([('createdAt', -1)]).skip((requestedPage - 1) * POST_PER_PAGE).limit(POST_PER_PAGE))
     if not pagedPosts:
@@ -437,6 +439,8 @@ def show_main():
 
     return make_response(jsonify({
         'result': 'success',
+        'totalPage' : total_pages,
+        'Page' : requestedPage,
         'data': objList
     }), 200)
 

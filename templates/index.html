@@ -75,12 +75,14 @@
 
     </style>
     <script>
+        var totalPage = 1;
+        var currentPage = 1;
 
         $(document).ready(function () {
             // 로그인 여부와 토큰 유효성 검사
             // validate_token_and_check_login();
-
-            $("#feed-box").empty();
+            
+            showMain(currentPage);
             showMain(1);
         });
 
@@ -247,6 +249,8 @@
                         if (response.result !== "success")
                         return;
 
+                        $("#feed-box").empty();
+
                         for (const post of response.data) {
                             console.log("post is: ");
                             console.dir(post);
@@ -269,7 +273,10 @@
                         }
 
                             // 선택된 페이지 (defalut : 1)
-                            // let page = response['page'];
+                        totalPage = response['totalPage'];
+                        currentPage = response['page'];
+
+                        makePagiNation(totalPage,pageNum);
 
                         },
                     error: function (error) {
@@ -496,6 +503,78 @@
             })
         }
 
+        function addToolTipEventLister(){
+            $('[data-toggle="tooltip"]').tooltip({placement: 'right',trigger: 'manual'}).tooltip('show');
+        }
+
+        function addPageEventListener(){
+                $('#pagination-box .page-link').on('click', function(event) {
+                const page = $(this).data('page');
+                event.preventDefault();
+                
+                if (page) {
+                    showMain(page);
+                }
+            });
+
+            $('#pagination-box .page-link-previous').on('click', function(event) {
+                event.preventDefault();
+                if (currentPage > 1) {
+                    makePagiNation(currentPage - pagiNationMaxNum);
+                }
+            });
+
+            // '다음' 버튼을 눌렀을 때
+            $('#pagination-box .page-link-next').on('click', function (event) {
+                event.preventDefault();
+                if (currentPage + pagiNationMaxNum <= totalPage) {
+                    makePagiNation(currentPage + pagiNationMaxNum);
+                }
+            });
+        }
+
+        function makePagiNation(totalPage,pageNum){
+            const pagiNationMaxNum = 5;
+            let pageShare = Math.floor(pageNum / pagiNationMaxNum);
+            let pageStart = pagiNationMaxNum * pageShare;
+            let pageEnd = pagiNationMaxNum * pageShare + 5;
+
+            if(pageEnd > totalPage){
+                pageEnd = totalPage;
+            }
+
+            console.log(pageShare);
+            console.log(pageStart);
+            console.log(pageEnd);
+
+            $("#pagination-box").empty();
+
+            let tempHtml = `<ul class="pagination">
+                <li class="page-item">
+                    <a class="page-link" href="#" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">이전</span>
+                    </a>
+                </li>`;
+            
+            for(let i = pageStart + 1; i <= pageEnd;i++){
+                let subHtml =`<li class="page-item">
+                    <a class="page-link" href="#" data-page="${i}">${i}</a>
+                    </li>`;
+
+                tempHtml += subHtml;
+            }
+
+            tempHtml += `<li class="page-item">
+                    <a class="page-link" href="#" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">다음</span>
+                    </a>
+                </li>
+            </ul>`;
+
+            $("#pagination-box").append(tempHtml);
+        }
         function validate_token_and_check_login() {
             $.ajax({
                         type: "GET",

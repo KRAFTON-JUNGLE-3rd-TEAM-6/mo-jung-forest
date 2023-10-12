@@ -73,6 +73,14 @@
             flex-grow: 1;
         }
 
+        .pagination .page-link {
+            color: rgb(126, 194, 23);
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: rgb(126, 194, 23);
+            color: #FFF;
+        }
 
         .btn-emoji-reaction:not(.selected):hover {
             background-color: #ddd;
@@ -88,8 +96,6 @@
             validate_token_and_check_login();
 
             showMain(currentPage);
-
-            
         });
 
         // 메세지 작성 이벤트 리스너: 실시간 글자 수 제한
@@ -607,6 +613,9 @@
                 $('#pagination-box .page-link').on('click', function(event) {
                 const page = $(this).data('page');
                 event.preventDefault();
+
+                $('#pagination-box .page-item').removeClass('active');
+                $(this).parent().addClass('active');
                 
                 if (page) {
                     showMain(page);
@@ -636,7 +645,7 @@
         function makePagiNation(totalPage,pageNum){
             const pagiNationMaxNum = 5;
             let pageStart = Math.max(1, pageNum - pagiNationMaxNum);
-            let pageEnd = Math.min(totalPage, pageNum + pagiNationMaxNum);
+            let pageEnd = Math.min(totalPage, pageNum + pagiNationMaxNum - 1);
 
             if(pageEnd > totalPage){
                 pageEnd = totalPage;
@@ -660,6 +669,9 @@
                     <a class="page-link" href="#" data-page="${i}">${i}</a>
                     </li>`;
 
+                    if (i === pageNum) {
+                        subHtml = subHtml.replace('<li class="page-item">', '<li class="page-item active">');
+                    }
                 tempHtml += subHtml;
             }
 

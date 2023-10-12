@@ -54,7 +54,8 @@ def home():
 
 @app.route('/main')
 def main():
-    return render_template('index.html')
+    name = request.cookies.get('name')
+    return render_template('index.html', userName=name)
 
 
 # 로그인

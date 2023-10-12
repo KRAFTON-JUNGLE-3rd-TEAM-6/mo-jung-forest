@@ -1,0 +1,13 @@
+* {
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+#board-title-big {
+    font-weight: 600;
+}
+
+#user-name-header {
+    font-weight: 600;
+    margin-right: 5px;
+    color: rgba(var(--bs-success-rgb),var(--bs-text-opacity))!important;
+}

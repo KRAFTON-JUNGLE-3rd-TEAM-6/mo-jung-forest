@@ -16,6 +16,75 @@
     <link href="../static/css/login.css" rel="stylesheet">
 
     <script>
+        $(document).ready(function() {
+            validate_token_and_auto_login()
+        })
+
+        function validate_token_and_auto_login() {
+            $.ajax({
+                        type: "GET",
+                        url: "/auth/check",
+                        contentType: "application/json; charset=utf-8",
+                        success: function(response) {
+                            if (response['result'] == 'success') {
+                                $(location).attr('href', "{{ url_for('main') }}");
+                            } else if(response['result'] == 'afail') {  // 'afail'인 경우, 액세스 토큰 재갱신 의사를 물어봄
+                                if(confirm("로그인 유지 시간이 만료되었습니다. 연장하시겠습니까?") == true) {
+                                    $.ajax({
+                                        type: "GET",
+                                        url: "/auth/refresh",
+                                        contentType: "application/json; charset=utf-8",
+                                        success: function(response) {
+                                            if (response['result'] == 'success') {  // 연장에 성공한 경우
+                                                alert('연장되었습니다.');
+                                            } else {  // 'fail'인 경우, 가이드 메시지
+                                                alert(response['data']);
+                                            }
+                                        }, error: function(error) {
+                                            alert(error);
+                                        }
+                                    })
+                                } else { // 토큰 갱신을 원하지 않으면, 로그아웃 처리
+                                    $.ajax({
+                                        type: "GET",
+                                        url: "/users/logout",
+                                        contentType: "application/json; charset=utf-8",
+                                        success: function(response) {
+                                            if (response['result'] == 'success') {
+                                                alert('로그아웃 되었습니다.');
+                                                $(location).attr('href', "{{ url_for('home') }}");
+                                            } else {  // 'fail'인 경우, 가이드 메시지
+                                                alert(response['data']);
+                                            }
+                                            
+                                        }, error: function(error) {
+                                            alert(error);
+                                        }
+                                    })
+                                }
+                            } else if(response['result'] == 'rfail') { // 'rfail'인 경우, 로그아웃 처리        
+                            $.ajax({
+                                        type: "GET",
+                                        url: "/users/logout",
+                                        contentType: "application/json; charset=utf-8",
+                                        success: function(response) {
+                                            if (response['result'] == 'success') {
+                                                alert('로그아웃 되었습니다.');
+                                                $(location).attr('href', "{{ url_for('home') }}");
+                                            } else {  // 'fail'인 경우, 가이드 메시지
+                                                alert(response['data']);
+                                            }
+                                            
+                                        }, error: function(error) {
+                                            alert(error);
+                                        }
+                                    })
+                            }
+                        }, error: function(error) {
+                            alert(error);
+                        }
+                    })
+        }
         function login() {
             var userId = document.getElementById("userId").value;
             var password = document.getElementById("password").value;

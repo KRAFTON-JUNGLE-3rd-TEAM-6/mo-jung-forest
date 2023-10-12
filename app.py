@@ -187,7 +187,9 @@ def check_id():
 def post_message():
     access_token = request.cookies.get('access_token_cookie')
     refresh_token = request.cookies.get('refresh_token_cookie')
-    validate_token(access_token, refresh_token)
+    
+    if access_token is None or refresh_token is None:
+        return jsonify({"result": "fail", "data": "로그인이 필요합니다."})
 
     post_data = request.get_json()
     if not post_data:
@@ -221,7 +223,9 @@ def post_message():
 def post_vote():
     access_token = request.cookies.get('access_token_cookie')
     refresh_token = request.cookies.get('refresh_token_cookie')
-    validate_token(access_token, refresh_token)
+    
+    if access_token is None or refresh_token is None:
+        return jsonify({"result": "fail", "data": "로그인이 필요합니다."})
 
     post_data = request.get_json()
     if not post_data:
@@ -254,7 +258,9 @@ def post_vote():
 def do_vote(voteId, optionId):
     access_token = request.cookies.get('access_token_cookie')
     refresh_token = request.cookies.get('refresh_token_cookie')
-    validate_token(access_token, refresh_token)
+    
+    if access_token is None or refresh_token is None:
+        return jsonify({"result": "fail", "data": "로그인이 필요합니다."})
 
     voterId = request.cookies.get('id')
 
@@ -375,18 +381,16 @@ def validate_token(access_token, refresh_token):
     
     try:
         decode_token(access_token).get(app.config["JWT_SECRET_KEY"], None)
+        
         # print("access token is valid")
     except ExpiredSignatureError: 
-        return jsonify({"result": "fail", "data": "로그인 유지 시간이 만료되었습니다. 다시 로그인해주세요."})
-    
+        return jsonify({"result": "afail", "data": "로그인 유지 시간이 만료되었습니다. 연장하시겠습니까?"})
     try:
         decode_token(refresh_token).get(app.config["JWT_SECRET_KEY"], None)
-        # print("refresh token is valid")
     except ExpiredSignatureError: 
-        # 로그아웃 처리 
-        logout()
+        return jsonify({"result": "rfail", "data": "마지막 로그인으로부터 30일이 지났습니다. 다시 로그인해주세요."})
 
-        return jsonify({"result": "fail", "data": "로그인한 시간이 오래되었습니다. 다시 로그인해주세요."})
+
     return jsonify({"result": "success", "data": "로그인이 유효합니다."})
 
 

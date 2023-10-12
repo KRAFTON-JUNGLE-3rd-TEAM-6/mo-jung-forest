@@ -92,31 +92,6 @@
             
         });
 
-        // 투표 이벤트 리스너: 투표 시 확인 메세지 출력
-        function addConfirmEventOnVoteRadio() {
-            $('input[type=radio][name=voteOption]').change(function() {
-                if (confirm('정말 투표하시겠습니까?')) {
-                    const voteId = "65274b3280920e306bdc1145";      // 임시 하드코딩, 카드HTML에서 동적으로 불러와야 함
-                    const optionId = this.value;
-                    $.ajax({
-                        type: 'POST',
-                        url: `http://127.0.0.1:5000/votes/${voteId}/options/${optionId}`,
-                        contentType: 'application/json',
-                        // data: JSON.stringify(formData),
-                        success: function(response) {
-                            console.log('Data submitted successfully:', response);
-                        },
-                        error: function(err) {
-                            console.error('Error:', err);
-                        }
-                    });
-                    // 투표 결과 카드로 갈아끼기
-                } else {
-                    $('input[type=radio][name=voteOption]').prop('checked', false);
-                }
-            });
-        }
-
         // 메세지 작성 이벤트 리스너: 실시간 글자 수 제한
         function addCharlimitEventOnMessageModal() {
             const messageInput = $('#postMessage-content');
@@ -289,7 +264,6 @@
                     }
                 });
 
-            addConfirmEventOnVoteRadio();
             addCharlimitEventOnMessageModal();
             addSubmitEventOnMessageModal();
             addCloseEventOnMessageModal();
@@ -340,6 +314,28 @@
             $("#feed-box").append(tempHtml);
         }
 
+        // 투표 온클릭 이벤트
+        function vote(postId, optionId) {
+            if (confirm('정말 투표하시겠습니까?')) {
+                $.ajax({
+                    type: 'POST',
+                    url: `/votes/${postId}/options/${optionId}`,
+                    contentType: 'application/json',
+                    // data: JSON.stringify(formData),
+                    success: function(response) {
+                        console.log('Data submitted successfully:', response);
+                        console.log("current page :"    + currentPage);
+                        showMain(currentPage);
+                    },
+                    error: function(err) {
+                        console.error('Error:', err);
+                    }
+                });
+            } else {
+                $('input[type=radio][name=voteOption]').prop('checked', false);
+            }
+        }
+
         function makeBeforeVoteCard(postId, title, options){
             let tempHtml = `
             <div id="${postId}" class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
@@ -353,9 +349,10 @@
                 <div class="card-body d-flex flex-column justify-content-center">`;
 
             options.forEach((e, i) => {
+                console.dir(e);
                 tempHtml += `
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="voteOption" value="${i}">
+                        <input class="form-check-input" type="radio" name="voteOption" onclick="vote('${postId}', '${e.optionId}')">
                         <label class="form-check-label">
                             ${e.content}
                         </label>

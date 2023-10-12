@@ -81,8 +81,10 @@
         $(document).ready(function () {
             // 로그인 여부와 토큰 유효성 검사
             // validate_token_and_check_login();
-            
+
             showMain(currentPage);
+
+            
         });
 
         // 투표 이벤트 리스너: 투표 시 확인 메세지 출력
@@ -402,15 +404,39 @@
                 console.log(obj);
                 
                 if (selectedOptionId == obj) {
-                    tooltipTitle = "내가 선택한 것"
+                    tooltipTitle = "내가 선택한 답변"
                 }
 
-                let subHtml =`<div id="vote-option">
-                    <div class="text-muted">${optionsMap[obj].content}</div>
-                    <div class="progress">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ rate }}%;" aria-valuenow="{{ rate }}" aria-valuemin="0" aria-valuemax="100" data-toggle="tooltip" data-placement="right" title="{{ tooltipTitle }}">${objValue}표</div>
+                var subHtml = ""
+                if(rate == 0)  {
+                    subHtml = `<div id="vote-option" style="display: flex; align-items: center; position: relative;width: 70%;">
+                        <div class="text-muted" style="min-width: 100px;">${optionsMap[obj].content}</div>
+                        <div class="progress" style="flex-grow: 1;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: ${5}%;" aria-valuenow="${rate}" aria-valuemin="0" aria-valuemax="100" 
+                            style="color: black;"></div><span style="margin-left:20px;color: black;">0표</span>
+                        </div>
+                        </div>`;
+                } else {
+                    if(tooltipTitle == "") {
+                        subHtml =`<div id="vote-option" style="display: flex; align-items: center; position: relative;width: 70%;">
+                    <div class="text-muted" style="min-width: 100px;">${optionsMap[obj].content}</div>
+                    <div class="progress" style="flex-grow: 1">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: ${rate}%;" aria-valuenow="${rate}" aria-valuemin="0" aria-valuemax="100" 
+                        >${objValue}표</div>
                     </div>
                 </div>`;
+                    } else {
+                        subHtml =`<div id="vote-option" style="display: flex; align-items: center; position: relative;width: 70%;">
+                    <div class="text-muted" style="min-width: 100px;">${optionsMap[obj].content}</div>
+                    <div class="progress" style="flex-grow: 1;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: ${rate}%;" aria-valuenow="${rate}" aria-valuemin="0" aria-valuemax="100" 
+                        >${objValue}표</div>
+                    </div>
+                    <span style="width: 200px;height: 25px;background: #05D282;position: absolute;right: -220px;color:#fff;border-radius:25px;text-align: center;">${tooltipTitle}</span>
+                </div>`;
+                    }
+                    
+                }
 
                 tempHtml += subHtml;
             }

@@ -377,7 +377,7 @@ def validate_token(access_token, refresh_token):
         decode_token(access_token).get(app.config["JWT_SECRET_KEY"], None)
         # print("access token is valid")
     except ExpiredSignatureError: 
-        return jsonify({"result": "fail", "data": "로그인 유지 시간이 만료되었습니다. 연장하시겠습니까?"})
+        return jsonify({"result": "fail", "data": "로그인 유지 시간이 만료되었습니다. 다시 로그인해주세요."})
     
     try:
         decode_token(refresh_token).get(app.config["JWT_SECRET_KEY"], None)

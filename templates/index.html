@@ -45,15 +45,15 @@
 
         
         $(document).ready(function () {
+            // 로그인 여부와 토큰 유효성 검사
+            validate_token_and_check_login();
+
             // $("#feed-box").empty();
             // showFeed();
             addConfirmEventOnVoteRadio();
             addCharlimitEventOnMessageModal();
             addSubmitEventOnMessageModal();
             addSubmitEventOnVoteModal();
-
-            // 로그인 여부와 토큰 유효성 검사
-            validate_token_and_check_login();
         });
 
         // 투표 이벤트 리스너: 투표 시 확인 메세지 출력

@@ -405,6 +405,7 @@ def show_main():
         if board['type'] == 'MESSAGE':
             message = db.Message.find_one({"_id" : ObjectId(board['postId'])})
             messageObj = {
+                "postId": str(message['_id']),
                 "mode" : "MESSAGE",
                 "recipient": message['recipient'],
 			    "content": message['content'],
@@ -423,6 +424,7 @@ def show_main():
             for poll in polls:
                 key_counts[poll['optionId']] += 1
             voteObj = {
+                "postId": str(vote['_id']),
                 "mode": "VOTE",
                 "title": vote['title'],
                 "options": vote['option'],

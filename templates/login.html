@@ -16,6 +16,89 @@
     <link href="../static/css/login.css" rel="stylesheet">
 
     <script>
+        var isIdCheckDone = false;
+
+        $(document).ready(function() {
+            validate_token_and_auto_login()
+
+            show_signup_modal()
+
+        })
+
+        function show_signup_modal() {
+            const signupModal = document.getElementById('signupModal')
+            if (signupModal) {
+                signupModal.addEventListener('show.bs.modal', event => {
+                    const button = event.relatedTarget
+                })
+            }
+        }
+
+        function validate_token_and_auto_login() {
+            $.ajax({
+                        type: "GET",
+                        url: "/auth/check",
+                        contentType: "application/json; charset=utf-8",
+                        success: function(response) {
+                            if (response['result'] == 'success') {
+                                $(location).attr('href', "{{ url_for('main') }}");
+                            } else if(response['result'] == 'afail') {  // 'afail'인 경우, 액세스 토큰 재갱신 의사를 물어봄
+                                if(confirm("로그인 유지 시간이 만료되었습니다. 연장하시겠습니까?") == true) {
+                                    $.ajax({
+                                        type: "GET",
+                                        url: "/auth/refresh",
+                                        contentType: "application/json; charset=utf-8",
+                                        success: function(response) {
+                                            if (response['result'] == 'success') {  // 연장에 성공한 경우
+                                                alert('연장되었습니다.');
+                                            } else {  // 'fail'인 경우, 가이드 메시지
+                                                alert(response['data']);
+                                            }
+                                        }, error: function(error) {
+                                            alert(error);
+                                        }
+                                    })
+                                } else { // 토큰 갱신을 원하지 않으면, 로그아웃 처리
+                                    $.ajax({
+                                        type: "GET",
+                                        url: "/users/logout",
+                                        contentType: "application/json; charset=utf-8",
+                                        success: function(response) {
+                                            if (response['result'] == 'success') {
+                                                alert('로그아웃 되었습니다.');
+                                                $(location).attr('href', "{{ url_for('home') }}");
+                                            } else {  // 'fail'인 경우, 가이드 메시지
+                                                alert(response['data']);
+                                            }
+                                            
+                                        }, error: function(error) {
+                                            alert(error);
+                                        }
+                                    })
+                                }
+                            } else if(response['result'] == 'rfail') { // 'rfail'인 경우, 로그아웃 처리        
+                            $.ajax({
+                                        type: "GET",
+                                        url: "/users/logout",
+                                        contentType: "application/json; charset=utf-8",
+                                        success: function(response) {
+                                            if (response['result'] == 'success') {
+                                                alert('로그아웃 되었습니다.');
+                                                $(location).attr('href', "{{ url_for('home') }}");
+                                            } else {  // 'fail'인 경우, 가이드 메시지
+                                                alert(response['data']);
+                                            }
+                                            
+                                        }, error: function(error) {
+                                            alert(error);
+                                        }
+                                    })
+                            }
+                        }, error: function(error) {
+                            alert(error);
+                        }
+                    })
+        }
         function login() {
             var userId = document.getElementById("userId").value;
             var password = document.getElementById("password").value;
@@ -38,8 +121,103 @@
                         }
                     })
             }
+
+        function register() {
+            var name = document.getElementById("register-name").value;
+            var userId = document.getElementById("register-userId").value;
+            var password = document.getElementById("register-password").value;
+            var passwordCheck = document.getElementById("register-passwordCheck").value;
+
+            result = validate_value(name, userId, password, passwordCheck);
+            
+            if(result == true) {
+                $.ajax({
+                        type: "POST",
+                        url: "/users/register",
+                        contentType: "application/json; charset=utf-8",
+                        data:  JSON.stringify( { 'name': name, 'userId': userId, 'password': password } ),
+                        dataType: "json",
+                        success: function(response) {
+                            if (response['result'] == 'success') {
+                                alert('회원가입이 완료되었습니다.');
+                                $('#signupModal').modal('hide');    // 완료하면 모달을 닫는다
+                            } else {  // 'fail'인 경우, 가이드 메시지
+                                alert(response['data']);
+                            }
+                        }, error: function(error) {
+                            alert(error);
+                        }
+                    })
+            }
+        }
         
-        
+        function validate_value(name, userId, password, passwordCheck) {
+            if(name == "") {
+                alert("이름을 입력해주세요.");
+                return false;
+            } else if(userId == "") {
+                alert("아이디를 입력해주세요.");
+                return false;
+            } else if(password == "") {
+                alert("비밀번호를 입력해주세요.");
+                return false;
+            } else if(passwordCheck == "") {
+                alert("비밀번호를 재확인해주세요.");
+                return false;
+            } else if(password != passwordCheck) {
+                alert("비밀번호가 일치하지 않습니다.");
+                return false;
+            } 
+
+            if(isIdCheckDone == false) {
+                alert("아이디 중복확인을 해주세요.");
+                return false;
+            }
+
+            return true;
+        }
+
+        function checkId() {
+            var userId = document.getElementById("register-userId").value;
+            if(userId == "") {
+                alert("아이디를 입력해주세요.");
+                return false;
+            }
+
+            $.ajax({
+                        type: "POST",
+                        url: "/users/check-id",
+                        contentType: "application/json; charset=utf-8",
+                        data:  JSON.stringify( { 'userId': userId } ),
+                        dataType: "json",
+                        success: function(response) {
+                            if (response['result'] == 'success') {
+                                alert(response['data']);
+
+                                isIdCheckDone = true;
+                                var checkIdButton = document.getElementById("check-id-button");
+                                checkIdButton.classList.remove("button");
+                                checkIdButton.classList.add("btn-primary");
+                            } else if(response['result'] == 'dsuccess') {   // 존재하는 아이디인 경우
+                                alert(response['data']);
+                                isIdCheckDone = false;
+                                var checkIdButton = document.getElementById("check-id-button");
+                                checkIdButton.classList.remove("btn-primary");
+                                checkIdButton.classList.add("button");
+                            }else {  // 'fail'인 경우, 가이드 메시지
+                                alert(response['data']);
+                                isIdCheckDone = false;
+                                var checkIdButton = document.getElementById("check-id-button");
+                                checkIdButton.classList.remove("btn-primary");
+                                checkIdButton.classList.add("button");
+                            }
+                        }, error: function(error) {
+                            alert(error);
+                        }
+                    })
+
+            
+        }
     </script>
 </head>
 <body>
@@ -53,23 +231,57 @@
             <div id="form_container">
                 <form name="loginForm" action="/users/login" method="post">
                     <div class="mb-3">
-                      <input id="userId" type="email" class="form-control" id="input-id" placeholder="아이디">
+                        <input id="userId" type="email" class="form-control" id="input-id" placeholder="아이디">
                     </div>
 
                     <div class="mb-3">
-                      <input id="password" type="password" class="form-control" id="inputPassword" placeholder="비밀번호">
+                        <input id="password" type="password" class="form-control" id="inputPassword" placeholder="비밀번호">
                     </div>
                     <div style="margin-bottom: 30px;"></div>
                     <div id="button_container">
-                        <button type="button" class="btn button flex-fill" style="margin-right: 10px;">회원가입</button>
+                        <button type="button" class="btn button flex-fill" style="margin-right: 10px;" data-bs-toggle="modal" data-bs-target="#signupModal">회원가입</button>
                         <button type="button" class="btn btn-primary flex-fill" onclick="login()">로그인</button>
                     </div>
-                  </form>
+                </form>
             </div>
         </div>
         <div id="img_container">
             <img id="half_circle_img" src="../static/img/half_circle_logo.png"  height="100%">
         </div>
+
+        <!---   회원가입 modal   -->
+        <div class="modal fade" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="signupModalLabel">회원가입</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="register-name" placeholder="이름">
+                    </div>
+                    <div class="mb-3" style="display: flex;">
+                        <input type="text" class="form-control" id="register-userId" style="margin-right: 10px;" placeholder="아이디">
+                        <button type="button" class="btn button" id="check-id-button" style="min-width: 100px;" onclick="checkId()">중복확인</button>
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="register-password" placeholder="비밀번호">
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="register-passwordCheck" placeholder="비밀번호 재확인">
+                    </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                    <button type="button" class="btn btn-primary" onclick="register()">제출!</button>
+                </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </body>
 </html>

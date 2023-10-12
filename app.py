@@ -160,8 +160,10 @@ def register():
         return jsonify({"result": "fail", "data": "회원가입 시도에 실패하였습니다. 다시 시도해주세요."})
 
 
+# 아이디 중복 체크
 @app.route("/users/check-id", methods=['POST'])
 def check_id():
+    
     requests = request.get_json()
     input_user_id = requests.get("userId")
 
@@ -179,25 +181,27 @@ def check_id():
 # 메세지 생성 기능
 @app.route('/messages', methods=['POST'])
 def post_message():
+    access_token = request.cookies.get('access_token_cookie')
+    refresh_token = request.cookies.get('refresh_token_cookie')
+    validate_token(access_token, refresh_token)
+
     post_data = request.get_json()
     if not post_data:
         return jsonify({
             'result': 'fail'
         })
     
-    generatorId = request.cookies.get('userId')     # 구현 예정
-    if not generatorId:
-        return jsonify({
-            'result': 'fail',
-            'message': '로그인이 필요합니다.'
-        })
-    
+    generatorId = request.cookies.get('id')  
+
+    kst = pytz.timezone('Asia/Seoul')
+    created_at = datetime.now(kst)
+
     try:
         db.Message.insert_one({
             "generatorId": generatorId,
             "recipient": post_data.get('recipient'),
             "content": post_data.get('content'),
-            "createdAt": post_data.get('createdAt')
+            "createdAt": created_at
         })
         return jsonify({
             'result': 'success'
@@ -207,21 +211,24 @@ def post_message():
             'result': 'fail'
         })
     
+
 # 투표 생성 기능
 @app.route('/votes', methods=['POST'])
 def post_vote():
+    access_token = request.cookies.get('access_token_cookie')
+    refresh_token = request.cookies.get('refresh_token_cookie')
+    validate_token(access_token, refresh_token)
+
     post_data = request.get_json()
     if not post_data:
         return jsonify({
             'result': 'fail'
         })
     
-    generatorId = request.cookies.get('userId')     # 구현 예정
-    if not generatorId:
-        return jsonify({
-            'result': 'fail',
-            'message': '로그인이 필요합니다.'
-        })
+    generatorId = request.cookies.get('id')  
+
+    kst = pytz.timezone('Asia/Seoul')
+    created_at = datetime.now(kst)
 
     try:
         db.Vote.insert_one({
@@ -232,7 +239,7 @@ def post_vote():
             "option3": post_data.get('option3'),
             "option4": post_data.get('option4'),
             "option5": post_data.get('option5'),
-            "createdAt": post_data.get('createdAt')
+            "createdAt": created_at
         })
         return jsonify({
             'result': 'success'
@@ -245,12 +252,11 @@ def post_vote():
 # 유저별 투표 기능
 @app.route('/votes/<voteId>/options/<optionId>', methods=['POST'])
 def do_vote(voteId, optionId):
-    voterId = request.cookies.get('userId')     # 구현 예정
-    if not voterId:
-        return jsonify({
-            'result': 'fail',
-            'message': '로그인이 필요합니다.'
-        })
+    access_token = request.cookies.get('access_token_cookie')
+    refresh_token = request.cookies.get('refresh_token_cookie')
+    validate_token(access_token, refresh_token)
+
+    voterId = request.cookies.get('id')  
 
     existingVote = db.UserVote.find_one({
         "voterId": voterId,
@@ -285,6 +291,9 @@ def do_vote(voteId, optionId):
 
 # 로그인이 필요한 api에서 사용하여 토큰이 유효한지 확인하는 함수
 def validate_token(access_token, refresh_token):
+    if access_token is None or refresh_token is None:
+        return jsonify({"result": "fail", "data": "로그인이 필요합니다."})
+    
     try:
         decode_token(access_token).get(app.config["JWT_SECRET_KEY"], None)
         # print("access token is valid")

@@ -91,6 +91,14 @@ def login():
     return response
 
 
+@app.route("/auth/check", methods=['GET'])
+def checkLoginFirst():
+    access_token = request.cookies.get('access_token')
+    refresh_token = request.cookies.get('refresh_token')
+
+    return validate_token(access_token, refresh_token)
+
+
 # 메세지 생성 기능
 @app.route('/messages', methods=['POST'])
 def post_message():
@@ -212,6 +220,7 @@ def validate_token(access_token, refresh_token):
     except ExpiredSignatureError: 
 
         return jsonify({"result": "fail", "data": "로그인한 시간이 오래되었습니다. 다시 로그인해주세요."})
+    return jsonify({"result": "success", "data": "로그인이 유효합니다."})
 
 
 if __name__ == '__main__':

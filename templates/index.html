@@ -39,6 +39,32 @@
             height: 100%; /* Ensure the image takes up the full height of the container */
         }
 
+        .emoji-reaction-buttons {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .btn-emoji-reaction {
+            border: none;
+            background-color: #eee;
+            color: #333;
+            border-radius: 20px;
+            padding: 2px 16px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .emoji-count {
+            font-size: 14px; /* Adjust the font size as needed */
+            white-space: nowrap; /* Prevent wrapping */
+        }
+
+
+        .btn-emoji-reaction:hover {
+            background-color: #ddd;
+        }
+
     </style>
     <script>
 
@@ -226,6 +252,7 @@
                                 const title = post.title;
                                 const options = post.options;
                                 console.log("vote is selected");
+                                console.log("optionProportions is: " + post.optionProportions);
                                 if (!post.selectedOptionId) {
                                     console.log("user hasn't voted yet");
                                     makeBeforeVoteCard(title, options);
@@ -468,5 +495,17 @@
             </div>
         </div>
     </div>
+
+    <div class="emoji-reaction-buttons">
+        <button class="btn btn-emoji-reaction">
+            😃 <span class="emoji-count">5</span>
+        </button>
+        <button class="btn btn-emoji-reaction">
+            👍 <span class="emoji-count">10</span>
+        </button>
+        <button class="btn btn-emoji-reaction">
+            ❤️ <span class="emoji-count">15</span>
+        </button>
+    
 </body>
 </html>

@@ -338,10 +338,16 @@ def show_main():
                 "voterId": request.cookies.get('id'),
                 "voteId": str(vote['_id'])
             })
+            from collections import defaultdict
+            key_counts = defaultdict(int)
+            polls = db.UserVote.find({"voteId": str(vote['_id'])})
+            for poll in polls:
+                key_counts[poll['optionId']] += 1
             voteObj = {
                 "mode": "VOTE",
                 "title": vote['title'],
-                "options": vote['option']
+                "options": vote['option'],
+                "optionProportions": [{key: value} for key, value in key_counts.items()]
             }
             if currentUserVote:
                 voteObj['selectedOptionId'] = currentUserVote['optionId']

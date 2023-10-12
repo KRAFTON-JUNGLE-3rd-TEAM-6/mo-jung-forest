@@ -298,81 +298,60 @@ def do_vote(voteId, optionId):
 # 메인 게시판 GET
 @app.route('/mainBoard', methods=['GET'])
 def show_main():
-    pageMaxNum = 4
-    pageNum = int(request.args.get('page'))
-    if pageNum <= 0:
-        print('전달된 Page 수가 이상합니다!!')
-        return jsonify({
-            'result': 'fail'
-        })
+    # 변수 할당
+    from typing import Final
+    POST_PER_PAGE: Final = 4
+    requestedPage = int(request.args.get('page'))
+
+    # 전체 게시글 수 조회
+    totalPostNum = db.BoardIndex.count_documents(filter={})
+    if not totalPostNum:
+        return make_response(jsonify({
+            'result': 'fail',
+            'message': 'No post in the database.'
+        }), 204)
     
-    dCount =db.BoardIndex.count_documents(filter={})
-    if dCount == 0:
-        print('showMain() : Data가 없어요!!')
-        return jsonify({
-            'result': 'fail'
-        })
-
-    print(dCount)
-
-    latest_BoardData = list(db.BoardIndex.find().sort([('createdAt', -1)]).skip((pageNum - 1) * pageMaxNum).limit(pageMaxNum))
-
-    if not latest_BoardData:
-        print('showMain() : Data 가져오기 실패!!')
-        return jsonify({
-            'result': 'fail'
-        })
+    # 최신 게시글 조회
+    pagedPosts = list(db.BoardIndex.find().sort([('createdAt', -1)]).skip((requestedPage - 1) * POST_PER_PAGE).limit(POST_PER_PAGE))
+    if not pagedPosts:
+        return make_response(jsonify({
+            'result': 'fail',
+            'message': 'No posts found for the page.'
+        }), 404)
     
-    # 보낼 데이터 리스트
-    sendResult = []
-
-    # 현재 로그인한 유저 id
-    userId = request.cookies.get('id')
-
-    for board in latest_BoardData: # 데이터 파악 및 만들기
+    objList = []
+    for board in pagedPosts:
         print(board)
+        # 게시글이 메세지인 경우
         if board['type'] == 'MESSAGE':
-            # 해당 테이블에서 data 찾기
-            boardData = db.Message.find_one({"_id" : ObjectId(board['postId'])})
-
-            jsData = {
+            message = db.Message.find_one({"_id" : ObjectId(board['postId'])})
+            messageObj = {
                 "mode" : "MESSAGE",
-                "recepient": boardData['recipient'],
-			    "content": boardData['content'],
+                "recipient": message['recipient'],
+			    "content": message['content'],
             }
-            sendResult.append(jsData)
+            objList.append(messageObj)
+        # 게시글이 투표인 경우
         elif board['type'] == 'VOTE':
-            boardData = db.Vote.find_one({"_id" : ObjectId(board['postId'])})
-            options = boardData['option']
-            optionContents = []
-            optionCounts = []
-
-            for option in options:
-                optionContents.append(option['content'])
-                count = db.UserVote.count_documents({"voteId" : boardData['_id'] , "optionId" : option['optionId']})
-                optionCounts.append(count)
-
-            userVote = db.UserVote.find_one({"voteId" : boardData['_id'] , "voterId" : userId})
-
-            userOptionId = None
-            # 유저가 옵션을 정했다면 find_one의 결과값이 있으며 여기서 optionId 가져오기
-            if userVote is not None:
-                userOptionId = userVote['optionId']
-
-            jsData = {
-                "mode" : "VOTE",
-                "title": boardData['title'],
-			    "options": optionContents,
-                "optionCounts" : optionCounts,
-                "optionId" : userOptionId # none일 경우 아직 투표를 안한 것
+            vote = db.Vote.find_one({"_id" : ObjectId(board['postId'])})
+            currentUserVote = db.UserVote.find_one({
+                "voterId": request.cookies.get('id'),
+                "voteId": str(vote['_id'])
+            })
+            voteObj = {
+                "mode": "VOTE",
+                "title": vote['title'],
+                "options": vote['option']
             }
+            if currentUserVote:
+                voteObj['selectedOptionId'] = currentUserVote['optionId']
 
-            sendResult.append(jsData)
+            objList.append(voteObj)
 
-    return jsonify({
+    return make_response(jsonify({
         'result': 'success',
-        'data' : sendResult
-        })
+        'data': objList
+    }), 200)
 
 
 #############################################################################

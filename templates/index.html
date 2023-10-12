@@ -251,22 +251,21 @@
                         $("#feed-box").empty();
 
                         for (const post of response.data) {
-                            console.log("post is: ");
                             console.dir(post);
                             if (post.mode == "MESSAGE"){
                                 makeMessageCard(post.postId, post.recipient, post.content);
+                                updateCardWithEmotion(post.postId);
                                 continue;
                             }
                             if (post.mode == "VOTE") {
-                                console.log("vote is selected");
-                                console.log("optionProportions is: " + post.optionProportions);
                                 if (!post.selectedOptionId) {
-                                    console.log("user hasn't voted yet");
                                     makeBeforeVoteCard(post.postId, post.title, post.options);
+                                    updateCardWithEmotion(post.postId);
                                     continue;
                                 }
                                 console.log("user has already voted");
                                 makeAfterVoteCard(post.title, post.options,post.optionProportions, post.selectedOptionId);
+                                updateCardWithEmotion(post.postId);
                                 continue;
                             }
                         }
@@ -305,27 +304,27 @@
                     ${content}
                 </div>
                 <div class="emoji-reaction-buttons">
-                    <button class="btn btn-emoji-reaction" value="0" onclick="react('${postId}', 0)"> <!-- 코드 스니펫 생성 시 postId가 string으로 들어가야 함 -->
+                    <button class="btn btn-emoji-reaction" value="0" onclick="react('${postId}', 0)">
                         <div class="emoji-btn-field">❤️</div>
                         <div class="emoji-count-field">0</div>
                     </button>
-                    <button class="btn btn-emoji-reaction" value="1" onclick="react('65274b3280920e306bdc1145', 1)">
+                    <button class="btn btn-emoji-reaction" value="1" onclick="react('${postId}', 1)">
                         <div class="emoji-btn-field">🤣</div>
                         <div class="emoji-count-field">0</div>
                     </button>
-                    <button class="btn btn-emoji-reaction" value="2" onclick="react('65274b3280920e306bdc1145', 2)">
+                    <button class="btn btn-emoji-reaction" value="2" onclick="react('${postId}', 2)">
                         <div class="emoji-btn-field">😪</div>
                         <div class="emoji-count-field">0</div>
                     </button>
-                    <button class="btn btn-emoji-reaction" value="3" onclick="react('65274b3280920e306bdc1145', 3)">
+                    <button class="btn btn-emoji-reaction" value="3" onclick="react('${postId}', 3)">
                         <div class="emoji-btn-field">💢</div>
                         <div class="emoji-count-field">0</div>
                     </button>
-                    <button class="btn btn-emoji-reaction" value="4" onclick="react('65274b3280920e306bdc1145', 4)">
+                    <button class="btn btn-emoji-reaction" value="4" onclick="react('${postId}', 4)">
                         <div class="emoji-btn-field">🔥</div>
                         <div class="emoji-count-field">0</div>
                     </button>
-                    <button class="btn btn-emoji-reaction" value="5" onclick="react('65274b3280920e306bdc1145', 5)">
+                    <button class="btn btn-emoji-reaction" value="5" onclick="react('${postId}', 5)">
                         <div class="emoji-btn-field">❓</div>
                         <div class="emoji-count-field">0</div>
                     </button>
@@ -336,7 +335,7 @@
 
         function makeBeforeVoteCard(postId, title, options){
             let tempHtml = `
-            <div class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
+            <div id="${postId}" class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
                 <div class="card-header">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-mailbox2-flag" viewBox="0 0 16 16">
                         <path d="M10.5 8.5V3.707l.854-.853A.5.5 0 0 0 11.5 2.5v-2A.5.5 0 0 0 11 0H9.5a.5.5 0 0 0-.5.5v8h1.5Z"/>
@@ -422,29 +421,26 @@
 
         function react(postId, emojiId) {
             const requestEmojiId = parseInt(emojiId);
-            console.log("requestEmojiId: ", requestEmojiId);
             const storedEmote = getEmotion(postId);
-            console.log("storedEmote: ", storedEmote);
-
+            
             // 반응 이력이 없는 경우 => POST
             if (!storedEmote) {
-                console.log("posting...");
-                postEmotion(postId, emojiId);
+                postEmotion(postId, requestEmojiId);
+                updateCardWithEmotion(postId);
                 return;
             }
             // 반응 이력이 있는 경우
             // (1) 요청 반응과 저장 반응이 같다면 취소 요청 => DELETE
             const storedEmojiId = storedEmote.emojiId;
-            console.log("storedEmojiId: ", storedEmojiId);
             if (requestEmojiId === storedEmojiId) {
-                console.log("deleting...");
                 deleteEmotion(postId, requestEmojiId);
+                updateCardWithEmotion(postId);
                 return;
             }
             // (2) 요청 반응과 저장 반응이 다르다면 업데이트 요청 => DELETE and POST
-            console.log("updating...");
             deleteEmotion(postId, storedEmojiId);
             postEmotion(postId, requestEmojiId);
+            updateCardWithEmotion(postId);
         }
 
         function getEmotion(postId) {
@@ -502,78 +498,29 @@
             })
         }
 
-        function addToolTipEventLister(){
-            $('[data-toggle="tooltip"]').tooltip({placement: 'right',trigger: 'manual'}).tooltip('show');
+        async function updateCardWithEmotion(postId) {
+            await $.ajax({
+                type: 'GET',
+                url: '/allreactions/' + postId,
+                contentType: 'application/json',
+                success: function(response) {
+                    emotes = response.storedEmotes;
+
+                    const zeroToFive = Array.from(Array(6).keys());
+                    for (const figure of zeroToFive) {
+                        const oldCount = $(`#${postId} .btn-emoji-reaction[value=${figure}] .emoji-count-field`).text();
+                        const newCount = emotes.filter(emote => emote.emojiId === figure).length;
+                        $(`#${postId} .btn-emoji-reaction[value=${figure}] .emoji-count-field`).text(newCount);
+                        console.log(`figuring ${figure}... ${oldCount} => ${newCount}`)
+                    };
+
+                },
+                error: function(err) {
+                    console.error('Error:', err);
+                }
+            })
         }
 
-        function addPageEventListener(){
-                $('#pagination-box .page-link').on('click', function(event) {
-                const page = $(this).data('page');
-                event.preventDefault();
-                
-                if (page) {
-                    showMain(page);
-                }
-            });
-
-            $('#pagination-box .page-link-previous').on('click', function(event) {
-                event.preventDefault();
-                if (currentPage > 1) {
-                    makePagiNation(currentPage - pagiNationMaxNum);
-                }
-            });
-
-            // '다음' 버튼을 눌렀을 때
-            $('#pagination-box .page-link-next').on('click', function (event) {
-                event.preventDefault();
-                if (currentPage + pagiNationMaxNum <= totalPage) {
-                    makePagiNation(currentPage + pagiNationMaxNum);
-                }
-            });
-        }
-
-        function makePagiNation(totalPage,pageNum){
-            const pagiNationMaxNum = 5;
-            let pageShare = Math.floor(pageNum / pagiNationMaxNum);
-            let pageStart = pagiNationMaxNum * pageShare;
-            let pageEnd = pagiNationMaxNum * pageShare + 5;
-
-            if(pageEnd > totalPage){
-                pageEnd = totalPage;
-            }
-
-            console.log(pageShare);
-            console.log(pageStart);
-            console.log(pageEnd);
-
-            $("#pagination-box").empty();
-
-            let tempHtml = `<ul class="pagination">
-                <li class="page-item">
-                    <a class="page-link" href="#" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                        <span class="sr-only">이전</span>
-                    </a>
-                </li>`;
-            
-            for(let i = pageStart + 1; i <= pageEnd;i++){
-                let subHtml =`<li class="page-item">
-                    <a class="page-link" href="#" data-page="${i}">${i}</a>
-                    </li>`;
-
-                tempHtml += subHtml;
-            }
-
-            tempHtml += `<li class="page-item">
-                    <a class="page-link" href="#" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                        <span class="sr-only">다음</span>
-                    </a>
-                </li>
-            </ul>`;
-
-            $("#pagination-box").append(tempHtml);
-        }
         function validate_token_and_check_login() {
             $.ajax({
                         type: "GET",

@@ -301,8 +301,29 @@ def do_vote(voteId, optionId):
         return make_response(jsonify({
             'result': 'fail'
         }), 400)
+    
+# 이모지 반응 다건 조회(모든 유저의 반응)
+@app.route('/allreactions/<postId>', methods=['GET'])
+def get_emotes(postId):
+    try:
+        emotes = list(db.EmojiReaction.find({"postId": postId}))
+        if not emotes:
+            return make_response(jsonify({
+                'result': 'success',
+                'storedEmotes': []
+            }), 200)
+        
+        return make_response(jsonify({
+            'result': 'success',
+            'storedEmotes': emotes
+        }), 200)
+    except:
+        return make_response(jsonify({
+            'result': 'fail'
+        }), 400)
 
-# 이모지 반응 조회
+
+# 이모지 반응 단건 조회(현재 유저의 반응만)
 @app.route('/reactions/<postId>', methods=['GET'])
 def get_emote(postId):
     # access_token = request.cookies.get('access_token_cookie')
@@ -316,9 +337,9 @@ def get_emote(postId):
         })
         if not emote:
             return make_response(jsonify({
-                'result': 'fail',
-                'message': 'No emote found.'
-            }), 404)
+                'result': 'success',
+                'storedEmote': emote
+            }), 200)
         
         return make_response(jsonify({
             'result': 'success',

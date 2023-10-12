@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <!-- JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="../static/css/login.css" rel="stylesheet">
+
+    <script>
+        function login() {
+            var userId = document.getElementById("userId").value;
+            var password = document.getElementById("password").value;
+            
+            $.ajax({
+                        type: "POST",
+                        url: "/users/login",
+                        contentType: "application/json; charset=utf-8",
+                        data:  JSON.stringify( {'userId': userId, 'password': password} ),
+                        dataType: "json",
+                        success: function(response) {
+                            if (response['result'] == 'success') {
+                                $(location).attr('href', "{{ url_for('main') }}");
+                            } else {  // 'fail'인 경우, 가이드 메시지
+                                alert(response['data']);
+                            }
+                            
+                        }, error: function(error) {
+                            alert(error);
+                        }
+                    })
+            }
+        
+        
+    </script>
+</head>
+<body>
+    <div id="container">
+        <div id="content_container">
+            <img id="logo_img" src="../static/img/logo.png" width="560px" height="180px">
+
+            <div style="margin-bottom: 80px;">
+                <span id="main_title_content">크래프톤 정글 대나무숲 '모여봐요, 정글의 숲'</span>
+            </div>
+            <div id="form_container">
+                <form name="loginForm" action="/users/login" method="post">
+                    <div class="mb-3">
+                      <input id="userId" type="email" class="form-control" id="input-id" placeholder="아이디">
+                    </div>
+
+                    <div class="mb-3">
+                      <input id="password" type="password" class="form-control" id="inputPassword" placeholder="비밀번호">
+                    </div>
+                    <div style="margin-bottom: 30px;"></div>
+                    <div id="button_container">
+                        <button type="button" class="btn button flex-fill" style="margin-right: 10px;">회원가입</button>
+                        <button type="button" class="btn btn-primary flex-fill" onclick="login()">로그인</button>
+                    </div>
+                  </form>
+            </div>
+        </div>
+        <div id="img_container">
+            <img id="half_circle_img" src="../static/img/half_circle_logo.png"  height="100%">
+        </div>
+    </div>
+</body>
+</html>

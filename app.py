@@ -313,6 +313,18 @@ def get_emotes(postId):
                 'storedEmotes': []
             }), 200)
         
+        userEmote = db.EmojiReaction.find_one({
+            "postId": postId,
+            "userId": request.cookies.get('id')
+        })
+        print(userEmote)
+        if userEmote:
+            return make_response(jsonify({
+                'result': 'success',
+                'storedEmotes': emotes,
+                'selectedEmojiId': userEmote['emojiId']
+            }), 200)
+        
         return make_response(jsonify({
             'result': 'success',
             'storedEmotes': emotes

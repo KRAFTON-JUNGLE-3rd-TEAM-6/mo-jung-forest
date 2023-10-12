@@ -63,13 +63,18 @@
             align-items: center;
         }
 
+        .btn-emoji-reaction.selected {
+            background-color: #6ddead;
+        }
+
+
         .emoji-count-field {
             font-size: 14px;
             flex-grow: 1;
         }
 
 
-        .btn-emoji-reaction:hover {
+        .btn-emoji-reaction:not(.selected):hover {
             background-color: #ddd;
         }
 
@@ -81,7 +86,7 @@
         $(document).ready(function () {
             // 로그인 여부와 토큰 유효성 검사
             // validate_token_and_check_login();
-            
+
             showMain(currentPage);
         });
 
@@ -399,7 +404,7 @@
                 let rate = objValue / max * 100;
                 let tooltipTitle = ""
                 console.log(obj);
-                
+
                 if (selectedOptionId == obj) {
                     tooltipTitle = "내가 선택한 것"
                 }
@@ -422,7 +427,7 @@
         function react(postId, emojiId) {
             const requestEmojiId = parseInt(emojiId);
             const storedEmote = getEmotion(postId);
-            
+
             // 반응 이력이 없는 경우 => POST
             if (!storedEmote) {
                 postEmotion(postId, requestEmojiId);
@@ -505,9 +510,9 @@
                 type: 'GET',
                 url: '/allreactions/' + postId,
                 contentType: 'application/json',
-                success: function(response) {
-                    emotes = response.storedEmotes;
-
+                success: function(response) {                    
+                    const emotes = response.storedEmotes;
+                    
                     const zeroToFive = Array.from(Array(6).keys());
                     for (const figure of zeroToFive) {
                         const oldCount = $(`#${postId} .btn-emoji-reaction[value=${figure}] .emoji-count-field`).text();
@@ -515,6 +520,9 @@
                         $(`#${postId} .btn-emoji-reaction[value=${figure}] .emoji-count-field`).text(newCount);
                         // console.log(`figuring ${figure}... ${oldCount} => ${newCount}`)
                     };
+
+                    $(`#${postId} .btn-emoji-reaction`).removeClass('selected');
+                    $(`#${postId} .btn-emoji-reaction[value=${response.selectedEmojiId}]`).addClass('selected');
 
                 },
                 error: function(err) {
@@ -675,7 +683,7 @@
     <div id="mypage-box" class="container">
         <div class="d-flex justify-content-end">
             <i class="bi bi-person-square" style="font-size: 19px;margin-top: 7px;margin-right: 10px;"></i>
-            
+
             <span id="user-name-header" class="mt-2 text-muted">{{ userName }}</span>
             <span  class="mt-2 text-muted">님 안녕하세요</span>
         </div>

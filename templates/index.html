@@ -39,11 +39,35 @@
             height: 100%; /* Ensure the image takes up the full height of the container */
         }
 
+        .emoji-reaction-buttons {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .btn-emoji-reaction {
+            border: none;
+            background-color: #eee;
+            color: #333;
+            border-radius: 20px;
+            padding: 2px 16px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .emoji-count {
+            font-size: 14px; /* Adjust the font size as needed */
+            white-space: nowrap; /* Prevent wrapping */
+        }
+
+
+        .btn-emoji-reaction:hover {
+            background-color: #ddd;
+        }
 
     </style>
     <script>
 
-        
         $(document).ready(function () {
             // 로그인 여부와 토큰 유효성 검사
             validate_token_and_check_login();
@@ -53,7 +77,9 @@
             addConfirmEventOnVoteRadio();
             addCharlimitEventOnMessageModal();
             addSubmitEventOnMessageModal();
+            addCloseEventOnMessageModal();
             addSubmitEventOnVoteModal();
+            addCloseEventOnVoteModal();
         });
 
         // 투표 이벤트 리스너: 투표 시 확인 메세지 출력
@@ -101,10 +127,19 @@
             });
         };
 
-        // 메세지 작성 이벤트 리스너: submit 요청 수행
+        // 메세지 작성 이벤트 리스너: submit 버튼
         function addSubmitEventOnMessageModal() {
             $('#postMessageForm').submit(function (event) {
                 event.preventDefault();
+
+                const defaultBtnText = "보내기";
+                const loadingBtnText = `
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                `;
+                $('#postMessage-postBtn').html(loadingBtnText);
+
 
                 const msgRecipient = $('#postMessage-recipient').val();
                 const msgContent = $('#postMessage-content').val();
@@ -120,18 +155,37 @@
                     data: JSON.stringify(formData),
                     success: function(response) {
                         console.log('Data submitted successfully:', response);
+                        $('#postMessage-title').val('');
+                        $('#postMessage-content').val('');
                     },
                     error: function(err) {
                         console.error('Error:', err);
+                        $('#postMessage-postBtn').html(defaultBtnText);
                     }
                 });
             });
         };
 
-        // 투표 제안 이벤트 리스너: submit 요청 수행
+        // 메세지 작성 이벤트 리스너: close 버튼
+        function addCloseEventOnMessageModal() {
+            $('#postMessage-closeBtn').click(function () {
+                $('#postMessage-title').val('');
+                $('#postMessage-content').val('');
+            });
+        }
+
+        // 투표 제안 이벤트 리스너: submit 버튼
         function addSubmitEventOnVoteModal() {
             $('#postVoteForm').submit(function (event) {
                 event.preventDefault();
+
+                const defaultBtnText = "투표 제안";
+                const loadingBtnText = `
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                `;
+                $('#postVote-postBtn').html(loadingBtnText);
 
                 const voteTitle = $('#postVote-title').val();
                 const voteOptions = [];
@@ -145,7 +199,7 @@
                     title: voteTitle,
                     option: voteOptions
                 };
-
+                
                 $.ajax({
                     type: 'POST',
                     url: 'http://127.0.0.1:5000/votes',
@@ -153,66 +207,83 @@
                     data: JSON.stringify(formData),
                     success: function(response) {
                         console.log('Data submitted successfully:', response);
+                        $('#postVote-title').val('');
+                        $('[id^="postVote-option"]').each((index, element) => {
+                            element.value = '';
+                        });
                     },
                     error: function(err) {
                         console.error('Error:', err);
+                        $('#postVote-postBtn').html(defaultBtnText);
                     }
                 });
             });
 
         };
 
-        
+        // 투표 제안 이벤트 리스너: close 버튼
+        function addCloseEventOnVoteModal() {
+            $('#postVote-closeBtn').click(function () {
+                $('#postVote-title').val('');
+                $('[id^="postVote-option"]').each((index, element) => {
+                    element.value = '';
+                });
+            });
+        }
+
         function showMain(pageNum){
             $.ajax({
                     type: "GET",
                     url: "/mainBoard?page=" + pageNum,
                     data: {},
                     success: function (response) {
-                        if(response['result'] == "success")
-                        {
-                            let data = response['data'];
-                            for(let i = 0; i <data.length;i++){
-                                let mode = data[i]['mode'];
-                                if(mode == "MESSAGE"){
-                                    let recepient = data[i]['recepient'];
-                                    let content = data[i]['content'];
-                                    //let reactionId = data['reactionId'];
-                                    //let reactions = data['reactions'];  // list
-                                    makeMessageCard(recepient,content);
-                                }
-                                else if(mode == "VOTE"){
-                                    let title = data[i]['title'];
-                                    let options = data[i]['options']; // list
-                                    let optionCounts = data[i]['optionCounts']; // list
-                                    let optionId = data[i]['optionId']; // 0인 경우는 투표 안한 경우
-                                    if(optionId == null){
-                                        makeBeforeVoteCard(title,options);
-                                    }
-                                    else{
-                                        makeAfterVoteCard(title,options,optionCounts,optionId);
-                                    }
-                                }       
+                        // HTTP 통신 성공이지만 메세지가 success가 아닌 경우 (드물 것으로 예상)
+                        if (response.result !== "success")
+                        return;
+                    
+                        for (const post of response.data) {
+                            console.dir(post);
+                            if (post.mode == "MESSAGE"){
+                                const recipient = post.recipient;
+                                const content = post.content;
+                                //let reactionId = data['reactionId'];
+                                //let reactions = data['reactions'];  // list
+                                makeMessageCard(recipient, content);
+                                continue;
                             }
-
+                            if (post.mode == "VOTE") {
+                                const title = post.title;
+                                const options = post.options;
+                                console.log("vote is selected");
+                                console.log("optionProportions is: " + post.optionProportions);
+                                if (!post.selectedOptionId) {
+                                    console.log("user hasn't voted yet");
+                                    makeBeforeVoteCard(title, options);
+                                    continue;
+                                }
+                                console.log("user has already voted");
+                                makeAfterVoteCard(title, options, post.selectedOptionId);
+                                continue;
+                            }
+                        }
+                        
                             // 선택된 페이지 (defalut : 1)
                             // let page = response['page'];
 
-                        }
-
-
-                       
+                        },
+                    error: function (error) {
+                        console.log(error);
                     }
-                })
+                });
         }
 
-        function makeMessageCard(recepient, content) {
+        function makeMessageCard(recipient, content) {
             let tempHtml = `<div class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
             <div class="card-header">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chat-right-dots-fill" viewBox="0 0 16 16">
                     <path d="M16 2a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9.586a1 1 0 0 1 .707.293l2.853 2.853a.5.5 0 0 0 .854-.353V2zM5 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 1a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
                 </svg>
-                익명의 사용자가 <b>${recepient}</b>에게 메세지를 남겼습니다
+                익명의 사용자가 <b>${recipient}</b>에게 메세지를 남겼습니다
             </div>
             <div class="card-body d-flex flex-column justify-content-center">
                 ${content}
@@ -221,7 +292,7 @@
             $("#feed-box").append(tempHtml);
         }
 
-        function makeBeforeVoteCard(title,options){
+        function makeBeforeVoteCard(title, options){
 
             let tempHtml = `<div class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
             <div class="card-header">
@@ -248,7 +319,7 @@
             $("#feed-box").append(tempHtml);
         }
 
-        function makeAfterVoteCard(title,options,optionCounts,optionId){
+        function makeAfterVoteCard(title, options, selectedOptionId){
             let tempHtml = `<h2 class="text-muted">익명의 사용자가 투표를 남겼습니다:<strong>"${title}"</strong> </h2>`;
             let max = 0;
             // for(let i = 0; i < optionCounts.length;i++){
@@ -436,35 +507,30 @@
 
     <!-- Hidden Modals -->
     <!-- 메세지 작성 모달 창 -->
-    <div class="modal fade" id="postMessageModal" tabindex="-1" aria-labelledby="postMessageModalLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="postMessageModal" tabindex="-1" aria-labelledby="postMessageModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <form id="postMessageForm">
                     <div class="modal-body">
                         <div class="d-flex align-items-center mb-1">
                             <div class="postMessage-iconField">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                    class="bi bi-envelope text-success" viewBox="0 0 16 16">
-                                    <path
-                                        d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z" />
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-envelope text-success" viewBox="0 0 16 16">
+                                    <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z" />
                                 </svg>
                                 받는 사람:
                             </div>
                             <div class="postMessage-recipientField">
-                                <input type="text" id="postMessage-recipient" class="form-control border-0"
-                                    placeholder="받는 사람을 입력하세요">
+                                <input type="text" id="postMessage-recipient" class="form-control border-0" placeholder="받는 사람을 입력하세요" required>
                             </div>
                         </div>
                         <div class="postMessage-contentField">
-                            <textarea class="form-control" id="postMessage-content" placeholder="메세지를 입력하세요"
-                                rows="5"></textarea>
+                            <textarea class="form-control" id="postMessage-content" placeholder="메세지를 입력하세요" rows="6" required></textarea>
                             <div id="postMessage-charCount" class="text-end">0/300</div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-                        <button type="submit" class="btn btn-success">보내기</button>
+                        <button type="button" id="postMessage-closeBtn" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                        <button type="submit" id="postMessage-postBtn" class="btn btn-success">보내기</button>
                     </div>
                 </form>
             </div>
@@ -478,29 +544,39 @@
                     <div class="modal-body">
                         <div class="d-flex align-items-center mb-1">
                             <div class="postVote-iconField">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                    class="bi bi-ui-checks text-success" viewBox="0 0 16 16">
-                                    <path
-                                        d="M7 2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-1zM2 1a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H2zm0 8a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2H2zm.854-3.646a.5.5 0 0 1-.708 0l-1-1a.5.5 0 1 1 .708-.708l.646.647 1.646-1.647a.5.5 0 1 1 .708.708l-2 2zm0 8a.5.5 0 0 1-.708 0l-1-1a.5.5 0 0 1 .708-.708l.646.647 1.646-1.647a.5.5 0 0 1 .708.708l-2 2zM7 10.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-1zm0-5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 8a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z" />
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-ui-checks text-success" viewBox="0 0 16 16">
+                                    <path d="M7 2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-1zM2 1a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H2zm0 8a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2H2zm.854-3.646a.5.5 0 0 1-.708 0l-1-1a.5.5 0 1 1 .708-.708l.646.647 1.646-1.647a.5.5 0 1 1 .708.708l-2 2zm0 8a.5.5 0 0 1-.708 0l-1-1a.5.5 0 0 1 .708-.708l.646.647 1.646-1.647a.5.5 0 0 1 .708.708l-2 2zM7 10.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-1zm0-5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 8a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z" />
                                 </svg>
                                 투표 주제:
                             </div>
                             <div class="postVote-titleField">
-                                <input type="text" id="postVote-title" class="form-control border-0" placeholder="주제를 입력하세요">
+                                <input type="text" id="postVote-title" class="form-control border-0" placeholder="주제를 입력하세요" required>
                             </div>
                         </div>
                         <div class="postVote-optionField">
-                            <input type="text" id="postVote-option1" class="form-control mb-1" placeholder="1안">
-                            <input type="text" id="postVote-option2" class="form-control mb-1" placeholder="2안">
+                            <input type="text" id="postVote-option1" class="form-control mb-1" placeholder="1안" required>
+                            <input type="text" id="postVote-option2" class="form-control mb-1" placeholder="2안" required>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-                        <button type="submit" class="btn btn-success">투표 제안</button>
+                        <button type="button" id="postVote-closeBtn" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                        <button type="submit" id="postVote-postBtn" class="btn btn-success">투표 제안</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    <div class="emoji-reaction-buttons">
+        <button class="btn btn-emoji-reaction">
+            😃 <span class="emoji-count">5</span>
+        </button>
+        <button class="btn btn-emoji-reaction">
+            👍 <span class="emoji-count">10</span>
+        </button>
+        <button class="btn btn-emoji-reaction">
+            ❤️ <span class="emoji-count">15</span>
+        </button>
+    
 </body>
 </html>

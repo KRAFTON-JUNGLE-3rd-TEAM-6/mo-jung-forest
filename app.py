@@ -283,24 +283,97 @@ def do_vote(voteId, optionId):
     })
     if existingVote:
         # 투표 결과를 바꾸고 싶을 경우 구현
-        return jsonify({
+        return make_response(jsonify({
             'result': 'fail',
             'message': '이미 투표하셨습니다.'
-        })
-
+        }), 400)
+    
     try:
         db.UserVote.insert_one({
             "voterId": voterId,
             "voteId": voteId,
             "optionId": optionId,
         })
-        return jsonify({
+        return make_response(jsonify({
             'result': 'success'
-        })
+        }), 200)
     except:
-        return jsonify({
+        return make_response(jsonify({
             'result': 'fail'
+        }), 400)
+
+# 이모지 반응 조회
+@app.route('/reactions/<postId>', methods=['GET'])
+def get_emote(postId):
+    # access_token = request.cookies.get('access_token_cookie')
+    # refresh_token = request.cookies.get('refresh_token_cookie')
+    # validate_token(access_token, refresh_token)
+
+    try:
+        emote = db.EmojiReaction.find_one({
+            "postId": postId,
+            "userId": request.cookies.get('id')
         })
+        if not emote:
+            return make_response(jsonify({
+                'result': 'fail',
+                'message': 'No emote found.'
+            }), 404)
+        
+        return make_response(jsonify({
+            'result': 'success',
+            'storedEmote': emote
+        }), 200)
+    except:
+        return make_response(jsonify({
+            'result': 'fail'
+        }), 400)
+
+    
+# 이모지 반응 추가
+@app.route('/reactions', methods=['POST'])
+def do_emote():
+    request_data = request.get_json()
+    postId = request_data.get('postId')
+    userId = request.cookies.get('id')
+    emojiId = request_data.get('emojiId')
+
+    try:
+        db.EmojiReaction.insert_one({
+            "postId": postId,
+            "userId": userId,
+            "emojiId": emojiId
+        })
+        return make_response(jsonify({
+            'result': 'success'
+        }), 200)
+    
+    except:
+        return make_response(jsonify({
+            'result': 'fail'
+        }), 400)
+    
+# 이모지 반응 제거
+@app.route('/reactions', methods=['DELETE'])
+def undo_emote():
+    request_data = request.get_json()
+    postId = request_data.get('postId')
+    userId = request.cookies.get('id')
+
+    try:
+        db.EmojiReaction.delete_one({
+            "postId": postId,
+            "userId": userId
+        })
+        return make_response(jsonify({
+            'result': 'success'
+        }), 200)
+    
+    except:
+        return make_response(jsonify({
+            'result': 'fail'
+        }), 400)        
+
 
 # 메인 게시판 GET
 @app.route('/mainBoard', methods=['GET'])
@@ -328,7 +401,6 @@ def show_main():
     
     objList = []
     for board in pagedPosts:
-        print(board)
         # 게시글이 메세지인 경우
         if board['type'] == 'MESSAGE':
             message = db.Message.find_one({"_id" : ObjectId(board['postId'])})

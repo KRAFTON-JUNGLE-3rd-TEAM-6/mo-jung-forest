@@ -1,6 +1,6 @@
 # import for flask app
 from datetime import datetime, timedelta
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, make_response
 from jwt import ExpiredSignatureError
 from pymongo import MongoClient
 from bson.objectid import ObjectId
@@ -190,10 +190,10 @@ def post_message():
     validate_token(access_token, refresh_token)
 
     post_data = request.get_json()
-    if not post_data:
-        return jsonify({
+    if not post_data or not post_data.get('recipient') or not post_data.get('content'):
+        return make_response(jsonify({
             'result': 'fail'
-        })
+        }), 400)
     
     generatorId = request.cookies.get('id')
 
@@ -207,13 +207,19 @@ def post_message():
             "content": post_data.get('content'),
             "createdAt": created_at
         })
-        return jsonify({
+        inserted_one = db.Message.find_one({"generatorId": generatorId, "createdAt": created_at})
+        db.BoardIndex.insert_one({
+            "postId": str(inserted_one['_id']),
+            "type": "MESSAGE",
+            "createdAt": created_at
+        })
+        return make_response(jsonify({
             'result': 'success'
-        })
+        }), 200)
     except:
-        return jsonify({
+        return make_response(jsonify({
             'result': 'fail'
-        })
+        }), 400)
     
 
 # 투표 생성 기능
@@ -224,10 +230,10 @@ def post_vote():
     validate_token(access_token, refresh_token)
 
     post_data = request.get_json()
-    if not post_data:
-        return jsonify({
+    if not post_data or not post_data.get('title') or not post_data.get('option'):
+        return make_response(jsonify({
             'result': 'fail'
-        })
+        }), 400)
     
     generatorId = request.cookies.get('id')
 
@@ -241,13 +247,19 @@ def post_vote():
             "option": post_data.get('option'),
             "createdAt": created_at
         })
-        return jsonify({
+        inserted_one = db.Vote.find_one({"generatorId": generatorId, "createdAt": created_at})
+        db.BoardIndex.insert_one({
+            "postId": str(inserted_one['_id']),
+            "type": "VOTE",
+            "createdAt": created_at
+        })
+        return make_response(jsonify({
             'result': 'success'
-        })
+        }), 200)
     except:
-        return jsonify({
+        return make_response(jsonify({
             'result': 'fail'
-        })
+        }), 400)
 
 # 유저별 투표 기능
 @app.route('/votes/<voteId>/options/<optionId>', methods=['POST'])
@@ -265,7 +277,7 @@ def do_vote(voteId, optionId):
     if existingVote:
         # 투표 결과를 바꾸고 싶을 경우 구현
         return jsonify({
-            'result': 'success',
+            'result': 'fail',
             'message': '이미 투표하셨습니다.'
         })
 

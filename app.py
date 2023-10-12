@@ -466,6 +466,7 @@ def show_main():
                 "optionProportions": [{key: value} for key, value in key_counts.items()]
             }
             if currentUserVote:
+                print("currentUserVote: ", currentUserVote)
                 voteObj['selectedOptionId'] = currentUserVote['optionId']
 
             objList.append(voteObj)

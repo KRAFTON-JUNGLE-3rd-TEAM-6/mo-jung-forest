@@ -237,18 +237,15 @@
                             if (post.mode == "MESSAGE"){
                                 makeMessageCard(post.postId, post.recipient, post.content);
                                 updateCardWithEmotion(post.postId);
-                                continue;
                             }
-                            if (post.mode == "VOTE") {
-                                if (!post.selectedOptionId) {
+                            else if (post.mode == "VOTE") {
+                                if (!post.hasOwnProperty('selectedOptionId')) {
                                     makeBeforeVoteCard(post.postId, post.title, post.options);
                                     updateCardWithEmotion(post.postId);
-                                    continue;
+                                } else {
+                                    makeAfterVoteCard(post.title, post.options,post.optionProportions, post.selectedOptionId);
+                                    updateCardWithEmotion(post.postId);
                                 }
-                                console.log("user has already voted");
-                                makeAfterVoteCard(post.title, post.options,post.optionProportions, post.selectedOptionId);
-                                updateCardWithEmotion(post.postId);
-                                continue;
                             }
                         }
 
@@ -324,7 +321,6 @@
                     // data: JSON.stringify(formData),
                     success: function(response) {
                         console.log('Data submitted successfully:', response);
-                        console.log("current page :"    + currentPage);
                         showMain(currentPage);
                     },
                     error: function(err) {
@@ -349,7 +345,6 @@
                 <div class="card-body d-flex flex-column justify-content-center">`;
 
             options.forEach((e, i) => {
-                console.dir(e);
                 tempHtml += `
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="voteOption" onclick="vote('${postId}', '${e.optionId}')">
@@ -362,7 +357,7 @@
             $("#feed-box").append(tempHtml);
         }
 
-        function makeAfterVoteCard(title, options,optionProportions,selectedOptionId){
+        function makeAfterVoteCard(title, options, optionProportions, selectedOptionId){
             let tempHtml = `<div class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
             <div class="card-header">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-mailbox2" viewBox="0 0 16 16">
@@ -557,7 +552,6 @@
         function addPageEventListener(){
                 $('#pagination-box .page-link').on('click', function(event) {
                 const page = $(this).data('page');
-                console.log(page);
                 event.preventDefault();
                 
                 if (page) {
@@ -593,9 +587,6 @@
             if(pageEnd > totalPage){
                 pageEnd = totalPage;
             }
-
-            console.log(pageStart);
-            console.log(pageEnd);
 
             $("#pagination-box").empty();
 

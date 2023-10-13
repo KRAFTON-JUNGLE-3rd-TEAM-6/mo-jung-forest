@@ -12,3 +12,15 @@
     margin-right: 5px;
     color: rgba(var(--bs-success-rgb),var(--bs-text-opacity))!important;
 }
+
+#logout-btn {
+    margin-top: 7px;
+    color: #218337;
+    font-weight: 500;
+    cursor: pointer; 
+    transition: background-color 0.3s ease; 
+}
+
+#logout-btn:hover {
+    background-color: #e6e6e6; 
+}

@@ -155,6 +155,7 @@
                         $('#postMessage-charCount').text('0/300');
                         $('#postMessage-postBtn').html(defaultBtnText);
                         $('#postMessageModal').modal('hide');
+                        showMain(1);
                     },
                     error: function(err) {
                         console.error('Error:', err);
@@ -212,6 +213,7 @@
                         });
                         $('#postVote-postBtn').html(defaultBtnText);
                         $('#postVoteModal').modal('hide');
+                        showMain(1);
                     },
                     error: function(err) {
                         console.error('Error:', err);

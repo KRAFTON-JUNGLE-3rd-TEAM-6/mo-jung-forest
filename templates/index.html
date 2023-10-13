@@ -146,13 +146,14 @@
 
                 $.ajax({
                     type: 'POST',
-                    url: 'http://127.0.0.1:5000/messages',
+                    url: '/messages',
                     contentType: 'application/json',
                     data: JSON.stringify(formData),
                     success: function(response) {
                         console.log('Data submitted successfully:', response);
                         $('#postMessage-recipient').val('');
                         $('#postMessage-content').val('');
+                        $('#postMessage-charCount').text('0/300');
                         $('#postMessage-postBtn').html(defaultBtnText);
                         $('#postMessageModal').modal('hide');
                     },
@@ -169,6 +170,7 @@
             $('#postMessage-closeBtn').click(function () {
                 $('#postMessage-recipient').val('');
                 $('#postMessage-content').val('');
+                $('#postMessage-charCount').text('0/300');
             });
         }
 
@@ -200,7 +202,7 @@
 
                 $.ajax({
                     type: 'POST',
-                    url: 'http://127.0.0.1:5000/votes',
+                    url: '/votes',
                     contentType: 'application/json',
                     data: JSON.stringify(formData),
                     success: function(response) {
@@ -444,34 +446,55 @@
 
                 var subHtml = ""
                 if(rate == 0)  {
+<<<<<<< HEAD
                     subHtml = `<div id="vote-option" style="align-items: center; position: relative;width: 70%;">
                         <div class="text-muted" style="min-width: 100px; font-size:20px;">${optionsMap[obj].content}</div>
                         <div class="progress" style="flex-grow: 1; height:30px; font-size:20px;">
                             <div class="progress-bar bg-success" role="progressbar" style="width: ${5}%;" aria-valuenow="${rate}" aria-valuemin="0" aria-valuemax="100" 
+=======
+                    subHtml = `<div id="vote-option" style="display: flex; align-items: center; position: relative;width: 70%;">
+                        <div class="text-muted" style="min-width: 100px;">${optionsMap[obj].content}</div>
+                        <div class="progress" style="flex-grow: 1;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: ${5}%;" aria-valuenow="${rate}" aria-valuemin="0" aria-valuemax="100"
+>>>>>>> 75194b89dfa3804b7c4b8b2f370f4facf15676e2
                             style="color: black;"></div><span style="margin-left:20px;color: black;">0표</span>
                         </div>
                         </div>`;
                 } else {
                     if(tooltipTitle == "") {
+<<<<<<< HEAD
                         subHtml =`<div id="vote-option" style="align-items: center; position: relative;width: 70%;">
                     <div class="text-muted" style="min-width: 100px; font-size:20px;">${optionsMap[obj].content}</div>
                     <div class="progress" style="flex-grow: 1;  height:30px; font-size:20px;">
                         <div class="progress-bar bg-success" role="progressbar" style="width: ${rate}%;" aria-valuenow="${rate}" aria-valuemin="0" aria-valuemax="100" 
+=======
+                        subHtml =`<div id="vote-option" style="display: flex; align-items: center; position: relative;width: 70%;">
+                    <div class="text-muted" style="min-width: 100px;">${optionsMap[obj].content}</div>
+                    <div class="progress" style="flex-grow: 1">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: ${rate}%;" aria-valuenow="${rate}" aria-valuemin="0" aria-valuemax="100"
+>>>>>>> 75194b89dfa3804b7c4b8b2f370f4facf15676e2
                         >${objValue}표</div>
                     </div>
                 </div>`;
                     } else {
+<<<<<<< HEAD
                         subHtml =`<div id="vote-option" style="align-items: center; position: relative;width: 70%;">
                     <div class="text-muted" style="min-width: 100px; font-size:20px;">${optionsMap[obj].content}</div>
                     <div class="progress" style="flex-grow: 1;  height:30px; font-size:20px;">
                         <div class="progress-bar bg-success" role="progressbar" style="width: ${rate}%;" aria-valuenow="${rate}" aria-valuemin="0" aria-valuemax="100" 
+=======
+                        subHtml =`<div id="vote-option" style="display: flex; align-items: center; position: relative;width: 70%;">
+                    <div class="text-muted" style="min-width: 100px;">${optionsMap[obj].content}</div>
+                    <div class="progress" style="flex-grow: 1;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: ${rate}%;" aria-valuenow="${rate}" aria-valuemin="0" aria-valuemax="100"
+>>>>>>> 75194b89dfa3804b7c4b8b2f370f4facf15676e2
                         >${objValue}표</div>
                         <span style="width: 200px;height: 32px;background: #05D282;position: absolute;right: -220px;color:#fff;border-radius:25px;text-align: center;">${tooltipTitle}</span>
                     </div>
                    
                 </div>`;
                     }
-                    
+
                 }
 
                 tempHtml += subHtml;
@@ -594,9 +617,9 @@
                 type: 'GET',
                 url: '/allreactions/' + postId,
                 contentType: 'application/json',
-                success: function(response) {                    
+                success: function(response) {
                     const emotes = response.storedEmotes;
-                    
+
                     const zeroToFive = Array.from(Array(6).keys());
                     for (const figure of zeroToFive) {
                         const oldCount = $(`#${postId} .btn-emoji-reaction[value=${figure}] .emoji-count-field`).text();
@@ -622,7 +645,7 @@
 
                 $('#pagination-box .page-item').removeClass('active');
                 $(this).parent().addClass('active');
-                
+
                 if (page) {
                     showMain(page);
                 }
@@ -708,9 +731,9 @@
             window.scrollTo(0,0);
 
             $("#pagination-box").append(tempHtml);
-            
+
         }
-        
+
         function validate_token_and_check_login() {
             $.ajax({
                         type: "GET",
@@ -821,6 +844,7 @@
     </div>
     </div>
     <div id="feed-box" class="container">
+<<<<<<< HEAD
         <!-- 개발용 카드 1: 메세지 -->
         <div class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
             <div class="card-header">
@@ -959,6 +983,9 @@
                 </button>
             </div>
         </div>
+=======
+
+>>>>>>> 75194b89dfa3804b7c4b8b2f370f4facf15676e2
     </div>
 
     <!-- pagination container -->
@@ -992,7 +1019,7 @@
                                 받는 사람:
                             </div>
                             <div class="postMessage-recipientField">
-                                <input type="text" id="postMessage-recipient" class="form-control border-0" placeholder="받는 사람을 입력하세요" required>
+                                <input type="text" id="postMessage-recipient" class="form-control border-0" placeholder="받는 사람을 입력하세요" maxlength="30" style="width: 370px;" required>
                             </div>
                         </div>
                         <div class="postMessage-contentField">
@@ -1022,12 +1049,12 @@
                                 투표 주제:
                             </div>
                             <div class="postVote-titleField">
-                                <input type="text" id="postVote-title" class="form-control border-0" placeholder="주제를 입력하세요" required>
+                                <input type="text" id="postVote-title" class="form-control border-0" placeholder="주제를 입력하세요" maxlength="30" style="width: 370px;" required>
                             </div>
                         </div>
                         <div class="postVote-optionField">
-                            <input type="text" id="postVote-option1" class="form-control mb-1" placeholder="1안" required>
-                            <input type="text" id="postVote-option2" class="form-control mb-1" placeholder="2안" required>
+                            <input type="text" id="postVote-option1" class="form-control mb-1" placeholder="1안" maxlength="80" required>
+                            <input type="text" id="postVote-option2" class="form-control mb-1" placeholder="2안" maxlength="80" required>
                         </div>
                     </div>
                     <div class="modal-footer">

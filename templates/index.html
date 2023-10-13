@@ -100,6 +100,7 @@
             // 로컬 스토리지에서 currentPage 값을 가져옴
             currentPage = parseInt(localStorage.getItem('currentPage')) || 1;
 
+            $("#feed-box").empty();
             showMain(currentPage);
         });
 
@@ -823,7 +824,6 @@
     </div>
     </div>
     <div id="feed-box" class="container">
-<<<<<<< HEAD
         <!-- 개발용 카드 1: 메세지 -->
         <div class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
             <div class="card-header">
@@ -962,14 +962,10 @@
                 </button>
             </div>
         </div>
-=======
-
->>>>>>> 75194b89dfa3804b7c4b8b2f370f4facf15676e2
     </div>
 
     <!-- pagination container -->
     <div id="pagination-box" class="container">
-        <h1>페이지네이션 예제</h1>
         <ul class="pagination">
             {#
             <li class="page-item"><a class="page-link" href="{{ url_for('index', page=1) }}">이전</a></li>

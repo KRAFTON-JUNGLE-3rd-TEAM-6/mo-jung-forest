@@ -259,7 +259,7 @@
                         totalPage = response['totalPage'];
                         currentPage = response['page'];
 
-                        makePagiNation(totalPage,pageNum);
+                        makePagiNation(totalPage,currentPage);
 
                         },
                     error: function (error) {
@@ -622,30 +622,43 @@
                 }
             });
 
-            const pagiNationMaxNum = 5;
+            
 
-            // '이전' 버튼을 눌렀을 때
-            $('#pagination-box .page-link-previous').on('click', function (event) {
-                event.preventDefault();
-                if (currentPage > pagiNationMaxNum) {
-                    makePagiNation(currentPage - pagiNationMaxNum);
-                }
-            });
+            // '이전' 버튼 클릭 이벤트 처리
+            $('#pagination-box .page-link-previous').on('click', handlePreviousButtonClick);
 
-            // '다음' 버튼을 눌렀을 때
-            $('#pagination-box .page-link-next').on('click', function (event) {
-                event.preventDefault();
-                if (currentPage + pagiNationMaxNum <= totalPage) {
-                    makePagiNation(currentPage + pagiNationMaxNum);
-                }
-            });
+            // '다음' 버튼 클릭 이벤트 처리
+            $('#pagination-box .page-link-next').on('click', handleNextButtonClick);
 
         }
 
+            function handlePreviousButtonClick(event) {
+                const pagiNationMaxNum = 5;
+                event.preventDefault();
+                if (currentPage > pagiNationMaxNum) {
+                    currentPage -= 1;
+                    console.log('이전');
+                    showMain(currentPage);
+                    makePagiNation(totalPage, currentPage);
+                }
+            }
+
+            function handleNextButtonClick(event) {
+                const pagiNationMaxNum = 5;
+                event.preventDefault();
+                if (currentPage  <= totalPage) {
+                    currentPage += 1;
+                    console.log('다음');
+                    showMain(currentPage);
+                    makePagiNation(totalPage, currentPage);
+                }
+            }
+
         function makePagiNation(totalPage,pageNum){
             const pagiNationMaxNum = 5;
-            let pageStart = Math.max(1, pageNum - pagiNationMaxNum);
-            let pageEnd = Math.min(totalPage, pageNum + pagiNationMaxNum - 1);
+            let pageP = Math.floor((pageNum - 1) / pagiNationMaxNum);
+            let pageStart = 1 + pageP * pagiNationMaxNum;
+            let pageEnd = Math.min(totalPage, pageStart + pagiNationMaxNum - 1);
 
             if(pageEnd > totalPage){
                 pageEnd = totalPage;
@@ -656,37 +669,39 @@
             let tempHtml = `<ul class="pagination">`;
 
             if (pageStart > pagiNationMaxNum) {
-            tempHtml += `<li class="page-item">
-                    <a class="page-link" href="#" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                        <span class="sr-only">이전</span>
-                    </a>
-                </li>`;
+                tempHtml += `<li class="page-item">
+            <a class="page-link page-link-previous" href="#" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+                <span class="sr-only">이전</span>
+            </a>
+        </li>`;
             }
-            
-            for(let i = pageStart; i <= pageEnd;i++){
-                let subHtml =`<li class="page-item">
+
+            for (let i = pageStart; i <= pageEnd; i++) {
+                let subHtml = `<li class="page-item">
                     <a class="page-link" href="#" data-page="${i}">${i}</a>
                     </li>`;
 
-                    if (i === pageNum) {
-                        subHtml = subHtml.replace('<li class="page-item">', '<li class="page-item active">');
-                    }
+                if (i === pageNum) {
+                    subHtml = subHtml.replace('<li class="page-item">', '<li class="page-item active">');
+                }
+
                 tempHtml += subHtml;
             }
 
             if (pageEnd < totalPage) {
-            tempHtml += `<li class="page-item">
-                    <a class="page-link" href="#" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                        <span class="sr-only">다음</span>
-                    </a>
-                </li>`;
+                tempHtml += `<li class="page-item">
+            <a class="page-link page-link-next" href="#" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+                <span class="sr-only">다음</span>
+            </a>
+        </li>`;
             }
 
             tempHtml += `</ul>`;
 
             $("#pagination-box").append(tempHtml);
+            
         }
         
         function validate_token_and_check_login() {

@@ -90,10 +90,14 @@
     <script>
         var totalPage = 1;
         var currentPage = 1;
+        const pagiNationMaxNum= 5;
 
         $(document).ready(function () {
             // 로그인 여부와 토큰 유효성 검사
             validate_token_and_check_login();
+
+            // 로컬 스토리지에서 currentPage 값을 가져옴
+            currentPage = parseInt(localStorage.getItem('currentPage')) || 1;
 
             showMain(currentPage);
         });
@@ -633,7 +637,6 @@
         }
 
             function handlePreviousButtonClick(event) {
-                const pagiNationMaxNum = 5;
                 event.preventDefault();
                 if (currentPage > pagiNationMaxNum) {
                     currentPage -= 1;
@@ -644,7 +647,6 @@
             }
 
             function handleNextButtonClick(event) {
-                const pagiNationMaxNum = 5;
                 event.preventDefault();
                 if (currentPage  <= totalPage) {
                     currentPage += 1;
@@ -655,7 +657,6 @@
             }
 
         function makePagiNation(totalPage,pageNum){
-            const pagiNationMaxNum = 5;
             let pageP = Math.floor((pageNum - 1) / pagiNationMaxNum);
             let pageStart = 1 + pageP * pagiNationMaxNum;
             let pageEnd = Math.min(totalPage, pageStart + pagiNationMaxNum - 1);
@@ -699,6 +700,9 @@
             }
 
             tempHtml += `</ul>`;
+
+            // currentPage를 로컬 스토리지에 저장
+            localStorage.setItem('currentPage', currentPage);
 
             $("#pagination-box").append(tempHtml);
             

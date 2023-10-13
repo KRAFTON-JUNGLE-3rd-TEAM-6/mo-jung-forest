@@ -344,7 +344,7 @@
 
         function makeBeforeVoteCard(postId, title, options){
             let tempHtml = `
-            <div id="${postId}" class="card mb-3 shadow-lg bg-light" style="height: 216.45px;box-shadow: rgba(0, 255, 8, 0.12) 5px 5px, rgba(0, 255, 8, 0.12) 10px 10px, rgba(0, 255, 8, 0.12) 15px 15px, rgba(0, 255, 8, 0.12) 20px 20px, rgba(0, 255, 8, 0.12) 25px 25px;">
+            <div id="${postId}" class="card mb-3 bg-light" style="height: 216.45px;box-shadow: rgba(0, 255, 8, 0.12) 5px 5px, rgba(0, 255, 8, 0.12) 10px 10px, rgba(0, 255, 8, 0.12) 15px 15px, rgba(0, 255, 8, 0.12) 20px 20px, rgba(0, 255, 8, 0.12) 25px 25px;">
                 <div class="card-header">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-mailbox2-flag" viewBox="0 0 16 16">
                         <path d="M10.5 8.5V3.707l.854-.853A.5.5 0 0 0 11.5 2.5v-2A.5.5 0 0 0 11 0H9.5a.5.5 0 0 0-.5.5v8h1.5Z"/>
@@ -396,7 +396,7 @@
         }
 
         function makeAfterVoteCard(postId, title, options, optionProportions, selectedOptionId){
-            let tempHtml = `<div id=${postId} class="card mb-3 shadow-lg bg-light" style="height: 216.45px;">
+            let tempHtml = `<div id=${postId} class="card mb-3 bg-light" style="height: 216.45px;box-shadow: rgba(0, 255, 8, 0.12) 5px 5px, rgba(0, 255, 8, 0.12) 10px 10px, rgba(0, 255, 8, 0.12) 15px 15px, rgba(0, 255, 8, 0.12) 20px 20px, rgba(0, 255, 8, 0.12) 25px 25px;">
             <div class="card-header">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-mailbox2" viewBox="0 0 16 16">
                     <path d="M9 8.5h2.793l.853.854A.5.5 0 0 0 13 9.5h1a.5.5 0 0 0 .5-.5V8a.5.5 0 0 0-.5-.5H9v1z"/>

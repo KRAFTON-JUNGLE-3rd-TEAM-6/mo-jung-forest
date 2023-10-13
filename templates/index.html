@@ -102,6 +102,13 @@
 
             $("#feed-box").empty();
             showMain(currentPage);
+
+            addCharlimitEventOnMessageModal();
+            addSubmitEventOnMessageModal();
+            addCloseEventOnMessageModal();
+            addSubmitEventOnVoteModal();
+            addCloseEventOnVoteModal();
+            
         });
 
         // 메세지 작성 이벤트 리스너: 실시간 글자 수 제한
@@ -157,7 +164,7 @@
                         $('#postMessage-charCount').text('0/300');
                         $('#postMessage-postBtn').html(defaultBtnText);
                         $('#postMessageModal').modal('hide');
-                        showMain(1);
+                        location.reload();
                     },
                     error: function(err) {
                         console.error('Error:', err);
@@ -215,7 +222,7 @@
                         });
                         $('#postVote-postBtn').html(defaultBtnText);
                         $('#postVoteModal').modal('hide');
-                        showMain(1);
+                        location.reload();
                     },
                     error: function(err) {
                         console.error('Error:', err);
@@ -249,7 +256,6 @@
                         $("#feed-box").empty();
 
                         for (const post of response.data) {
-                            console.dir(post);
                             if (post.mode == "MESSAGE"){
                                 makeMessageCard(post.postId, post.recipient, post.content);
                                 updateCardWithEmotion(post.postId);
@@ -269,6 +275,10 @@
                         totalPage = response['totalPage'];
                         currentPage = response['page'];
 
+                        console.log("totalPage : " + totalPage);
+                        console.log("currentPage : " + currentPage);
+
+
                         makePagiNation(totalPage,currentPage);
 
                         },
@@ -277,11 +287,6 @@
                     }
                 });
 
-            addCharlimitEventOnMessageModal();
-            addSubmitEventOnMessageModal();
-            addCloseEventOnMessageModal();
-            addSubmitEventOnVoteModal();
-            addCloseEventOnVoteModal();
             addPageEventListener();
         }
 
